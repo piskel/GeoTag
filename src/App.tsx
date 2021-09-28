@@ -35,6 +35,8 @@ if (Platform.OS === "android") {
   StatusBar.setTranslucent(true);
 }
 
+
+
 const App = () =>
 {
 
@@ -75,7 +77,10 @@ const App = () =>
   return (
     <SafeAreaView style={styles.container} >
       <View style={styles.container}>
-        <MapView style={styles.map}>
+        <MapView style={styles.map}
+        showsCompass={false}
+        // rotateEnabled={false}
+        >
         </MapView>
       </View>
       <ScrollView
