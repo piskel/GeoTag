@@ -1,4 +1,5 @@
 {
   "name": "GeoTag",
-  "displayName": "GeoTag"
+  "displayName": "GeoTag",
+  "android.config.googleMaps.apiKey":"AIzaSyB1MDvdxdoOp3MTm69bxZDyP76bbPZLRQ4"
 }
