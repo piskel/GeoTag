@@ -12,8 +12,10 @@ import React from 'react';
 import {
   Alert,
   Button,
+  Platform,
   SafeAreaView,
   ScrollView,
+  StatusBar,
   StyleSheet,
   useColorScheme,
   View,
@@ -26,6 +28,12 @@ import {
 
 import Geolocation from 'react-native-geolocation-service';
 
+StatusBar.setBarStyle("dark-content");
+
+if (Platform.OS === "android") {
+  StatusBar.setBackgroundColor("rgba(0,0,0,0)");  
+  StatusBar.setTranslucent(true);
+}
 
 const App = () =>
 {
@@ -53,13 +61,10 @@ const App = () =>
 
   const styles = StyleSheet.create({
     container: {
-      flex: 1,
-      // alignItems: 'center',
-      // justifyContent: 'center',
+      flex: 1
     },
     map: {
-      ...StyleSheet.absoluteFillObject,
-      flex:1
+      ...StyleSheet.absoluteFillObject
     },
     scrollview: {
       flex:1
@@ -75,10 +80,24 @@ const App = () =>
       </View>
       <ScrollView
         style={styles.scrollview}
-        // style={styles.container}
-        >
+      // style={styles.container}
+      >
 
-          <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
+        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
+        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
+        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
+        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
+        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
+        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
+        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
+        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
+        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
+        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
+        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
+        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
+        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
+        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
+        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
 
       </ScrollView>
     </SafeAreaView>
