@@ -17,6 +17,8 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
+  Text,
+  TouchableOpacity,
   useColorScheme,
   View,
 } from 'react-native';
@@ -27,6 +29,8 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 
 import Geolocation from 'react-native-geolocation-service';
+import QRCodeScanner from 'react-native-qrcode-scanner';
+import { RNCamera } from 'react-native-camera';
 
 StatusBar.setBarStyle("dark-content");
 
@@ -77,11 +81,28 @@ const App = () =>
   return (
     <SafeAreaView style={styles.container} >
       <View style={styles.container}>
-        <MapView style={styles.map}
+        {/* <MapView style={styles.map}
         showsCompass={false}
         // rotateEnabled={false}
         >
-        </MapView>
+        </MapView> */}
+      
+      {/* <QRCodeScanner
+        onRead={(e)=> Alert.alert(e.data)}
+        // flashMode={RNCamera.Constants.FlashMode.torch}
+        topContent={
+          <Text>
+            Go to{' '}
+            <Text>wikipedia.org/wiki/QR_code</Text> on
+            your computer and scan the QR code.
+          </Text>
+        }
+        bottomContent={
+          <TouchableOpacity>
+            <Text>OK. Got it!</Text>
+          </TouchableOpacity>
+        }
+      /> */}
       </View>
       <ScrollView
         style={styles.scrollview}
