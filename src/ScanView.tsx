@@ -1,13 +1,9 @@
 // TODO: Move exploration view code rom App.tsx to here.
 
-import { useNavigation } from '@react-navigation/core';
-import { NavigationContainer } from '@react-navigation/native';
-import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
-import { NavigationState, StackNavigationState } from '@react-navigation/routers';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
-import { Alert, Button, PanResponder, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { RNCamera } from 'react-native-camera';
-import MapView from "react-native-maps";
 import QRCodeScanner from 'react-native-qrcode-scanner';
 import { RootStackParamList } from './RootStackParams';
 
@@ -52,11 +48,8 @@ export default class ScanView
                     flex: 1,
                     width: '100%',
                     }}
-                    // onGoogleVisionBarcodesDetected={(e) => Alert.alert(e.)}
-                    onBarCodeRead={(e) => this.props.navigation.navigate('ExplorationView')
-                }
+                    onBarCodeRead={(e) => this.props.navigation.navigate('ExplorationView')}
                     captureAudio={false}
-
                 >
 
                 </RNCamera>

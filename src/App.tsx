@@ -10,27 +10,17 @@
 
 import React from 'react';
 import {
-  Alert,
-  Button,
   Platform,
-  SafeAreaView,
-  ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
-  TouchableOpacity,
   useColorScheme,
-  View,
 } from 'react-native';
-import MapView, { } from 'react-native-maps';
 
 import {
   Colors
 } from 'react-native/Libraries/NewAppScreen';
 
 import Geolocation from 'react-native-geolocation-service';
-import QRCodeScanner from 'react-native-qrcode-scanner';
-import { RNCamera } from 'react-native-camera';
 import ExplorationView from './ExplorationView';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -63,6 +53,7 @@ const App = () => {
 
   const isDarkMode = useColorScheme() === 'dark';
 
+  // TODO: Put styles in a single ts file
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
@@ -85,16 +76,18 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        <Stack.Screen
+      <Stack.Screen
           name="ExplorationView"
           component={ExplorationView}
           options={{ headerShown: false }}
         />
-        <Stack.Screen
+ 
+      <Stack.Screen
           name="ScanView"
           component={ScanView}
           options={{ headerShown: false }}
         />
+
 
       </Stack.Navigator>
     </NavigationContainer>
