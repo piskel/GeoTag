@@ -22,7 +22,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import MapView, {  } from 'react-native-maps';
+import MapView, { } from 'react-native-maps';
 
 import {
   Colors
@@ -31,18 +31,21 @@ import {
 import Geolocation from 'react-native-geolocation-service';
 import QRCodeScanner from 'react-native-qrcode-scanner';
 import { RNCamera } from 'react-native-camera';
+import ExplorationView from './ExplorationView';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import ScanView from './ScanView';
 
 StatusBar.setBarStyle("dark-content");
 
 if (Platform.OS === "android") {
-  StatusBar.setBackgroundColor("rgba(0,0,0,0)");  
+  StatusBar.setBackgroundColor("rgba(0,0,0,0)");
   StatusBar.setTranslucent(true);
 }
 
 
 
-const App = () =>
-{
+const App = () => {
 
   // GEOLOCATION
   Geolocation.getCurrentPosition(
@@ -73,60 +76,28 @@ const App = () =>
       ...StyleSheet.absoluteFillObject
     },
     scrollview: {
-      flex:1
+      flex: 1
     }
   });
 
+  const Stack = createNativeStackNavigator();
 
   return (
-    <SafeAreaView style={styles.container} >
-      <View style={styles.container}>
-        {/* <MapView style={styles.map}
-        showsCompass={false}
-        // rotateEnabled={false}
-        >
-        </MapView> */}
-      
-      {/* <QRCodeScanner
-        onRead={(e)=> Alert.alert(e.data)}
-        // flashMode={RNCamera.Constants.FlashMode.torch}
-        topContent={
-          <Text>
-            Go to{' '}
-            <Text>wikipedia.org/wiki/QR_code</Text> on
-            your computer and scan the QR code.
-          </Text>
-        }
-        bottomContent={
-          <TouchableOpacity>
-            <Text>OK. Got it!</Text>
-          </TouchableOpacity>
-        }
-      /> */}
-      </View>
-      <ScrollView
-        style={styles.scrollview}
-      // style={styles.container}
-      >
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen
+          name="ExplorationView"
+          component={ExplorationView}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ScanView"
+          component={ScanView}
+          options={{ headerShown: false }}
+        />
 
-        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-        <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-
-      </ScrollView>
-    </SafeAreaView>
+      </Stack.Navigator>
+    </NavigationContainer>
 
   );
 }
