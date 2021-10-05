@@ -2,11 +2,11 @@
 
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
-import { Alert, Button, ScrollView, StyleSheet, View } from "react-native";
+import { Alert, Button, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import MapView, { AnimatedRegion, Marker, MarkerAnimated } from "react-native-maps";
 import { RootStackParamList } from './RootStackParams';
 import Geolocation from 'react-native-geolocation-service';
-import { thisExpression } from '@babel/types';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 
 const styles = StyleSheet.create({
@@ -18,6 +18,34 @@ const styles = StyleSheet.create({
   },
   scrollview: {
     flex: 1
+  },
+  scanButtonView:{
+    position:'absolute',
+    // alignSelf:'center',
+    // alignItems:'center',
+    // alignSelf:'center',
+
+    // top:10,
+    // left:10,
+    bottom:10,
+    right:10,
+    margin:0,
+    padding:0
+  },
+  scanButton:
+  {
+    // justifyContent:'center',
+    // textAlign:'center',
+    // flex:0,
+    margin:0,
+    padding:2,
+    // paddingTop:0,
+    // left:0,
+    // right:0
+  },
+  scanButtonStyle:
+  {
+    marginRight:0,
   }
 });
 
@@ -86,6 +114,10 @@ export default class ExplorationView
           >
             {this.state.markerList}
           </MapView>
+          <View style={styles.scanButtonView}>
+          <Icon.Button  iconStyle={styles.scanButtonStyle} style={styles.scanButton}  name="qrcode" size={50} onPress={(e) => this.props.navigation.navigate('ScanView')}></Icon.Button>
+
+          </View>
         </View>
         <ScrollView
           style={styles.scrollview}
