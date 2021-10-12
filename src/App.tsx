@@ -10,6 +10,7 @@ import ExplorationView from './ExplorationView';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ScanView from './ScanView';
+import TagDetailsView from './TagDetailsView';
 
 StatusBar.setBarStyle("dark-content");
 
@@ -41,6 +42,14 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator>
+
+
+      <Stack.Screen
+          name="TagDetailsView"
+          component={TagDetailsView}
+          options={{ headerShown: false }}
+        />
+
       <Stack.Screen
           name="ExplorationView"
           component={ExplorationView}
