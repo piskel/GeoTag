@@ -1,24 +1,9 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * Generated with the TypeScript template
- * https://github.com/react-native-community/react-native-template-typescript
- *
- * @format
- */
-
 import React from 'react';
 import {
   Platform,
   StatusBar,
-  StyleSheet,
-  useColorScheme,
 } from 'react-native';
 
-import {
-  Colors
-} from 'react-native/Libraries/NewAppScreen';
 
 import Geolocation from 'react-native-geolocation-service';
 import ExplorationView from './ExplorationView';
@@ -50,26 +35,6 @@ const App = () => {
   );
 
   ///////////////////////////////////
-
-  const isDarkMode = useColorScheme() === 'dark';
-
-  // TODO: Put styles in a single ts file
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
-
-
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1
-    },
-    map: {
-      ...StyleSheet.absoluteFillObject
-    },
-    scrollview: {
-      flex: 1
-    }
-  });
 
   const Stack = createNativeStackNavigator();
 
