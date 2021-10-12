@@ -9,8 +9,8 @@ import Geolocation from 'react-native-geolocation-service';
 import ExplorationView from './ExplorationView';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import ScanView from './ScanView';
 import TagDetailsView from './TagDetailsView';
+import { NativeBaseProvider } from 'native-base';
 
 StatusBar.setBarStyle("dark-content");
 
@@ -41,31 +41,27 @@ const App = () => {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator>
+      <NativeBaseProvider>
+        <Stack.Navigator>
 
 
-      <Stack.Screen
-          name="TagDetailsView"
-          component={TagDetailsView}
-          options={{ headerShown: false }}
-        />
-
-      <Stack.Screen
-          name="ExplorationView"
-          component={ExplorationView}
-          options={{ headerShown: false }}
-        />
- 
-      <Stack.Screen
-          name="ScanView"
-          component={ScanView}
-          options={{ headerShown: false }}
-        />
 
 
-      </Stack.Navigator>
+          <Stack.Screen
+            name="ExplorationView"
+            component={ExplorationView}
+            options={{ headerShown: false }}
+          />
+
+          <Stack.Screen
+            name="TagDetailsView"
+            component={TagDetailsView}
+            options={{ headerShown: false }}
+          />
+
+        </Stack.Navigator>
+      </NativeBaseProvider>
     </NavigationContainer>
-
   );
 }
 

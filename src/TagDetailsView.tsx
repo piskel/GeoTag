@@ -4,7 +4,8 @@ import { Button, Text, TextBase, View } from "react-native";
 import MapView, { Animated } from "react-native-maps";
 import { RootStackParamList } from "./RootStackParams";
 import { styles } from "./styles";
-
+import {Box, Heading, SectionList, ZStack} from 'native-base'
+import { RNCamera } from "react-native-camera";
 
 type TagDetailsViewProps = NativeStackScreenProps<RootStackParamList, 'TagDetailsView'>;
 
@@ -28,22 +29,25 @@ export default class TagDetailsView
                         rotateEnabled={false}
                         showsUserLocation={true}
                         showsMyLocationButton={false}
+                        
                         followsUserLocation={true}
+                        
                         showsBuildings={true}
-                        initialCamera={{
+                        camera={{
                             altitude:0,
                             center:{latitude:47.26126126126126, longitude:7.009079597967446},
                             heading:0, // Camera rotation
                             pitch:90, // Camera inclination
-                            zoom:17 // Camera zoom
+                            zoom:15 // Camera zoom
                         }}
                     >
                     </MapView>
                 </View>
-                <View style={{flex:3}}>
-                    <Text>
-                        Test
-                    </Text>
+                <View style={{flex:2.5, padding:0}}>
+
+                    <Heading>
+                        kkoin
+                    </Heading>
                 </View>
             </View>
         );
