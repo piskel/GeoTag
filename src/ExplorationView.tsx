@@ -1,18 +1,16 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
-import { Alert, Button, ScrollView, View } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import { Button, ScrollView, View } from "react-native";
+import MapView from "react-native-maps";
 import { RootStackParamList } from './RootStackParams';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { styles } from './styles';
 import { Center, Modal } from 'native-base';
 import { BarCodeReadEvent, RNCamera } from 'react-native-camera';
 import Geolocation from 'react-native-geolocation-service';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import TagStruct from './TagStruct';
 
-
-
-
+// TODO : Let users set their tag either public (displays them on the map)
 
 // const storeData = async (value:any) =>
 // {
@@ -41,7 +39,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 type ExplorationViewProps = NativeStackScreenProps<RootStackParamList, 'ExplorationView'>;
 
 export interface ExplorationViewState {
-  markerList: any[],
+  markerList: TagStruct[],
   showModal: boolean,
   initialCoordinates: {
     latitude: number,
@@ -86,15 +84,7 @@ export default class ExplorationView
    * Updates the list of markers that are displayed on the map.
    */
   updateMarkers() {
-    this.setState({ markerList: [] });
 
-    let tmpMarkerList = [];
-
-    for (let i = 0; i < 100; i++) {
-      tmpMarkerList.push(<Marker key={i} coordinate={{ latitude: i % 180 - 90, longitude: i % 180 }} />);
-    }
-
-    this.setState({ markerList: tmpMarkerList });
   }
 
   /**
@@ -158,22 +148,15 @@ export default class ExplorationView
 
         <ScrollView style={styles.scrollview}>
 
-          <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-          <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-          <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-          <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-          <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-          <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-          <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-          <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-          <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-          <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-          <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-          <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-          <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-          <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-          <Button title="OK" onPress={() => Alert.alert('Button with adjusted color pressed')}></Button>
-
+          <Button title="OK" onPress={() => this.props.navigation.navigate('TagDetailsView', {tag:{coordinate:{latitude:0, longitude:0}, creationDate:Date.now(), isFound:false}})}></Button>
+          {/* <Button title="OK" onPress={() => this.props.navigation.navigate('TagDetailsView')}></Button>
+          <Button title="OK" onPress={() => this.props.navigation.navigate('TagDetailsView')}></Button>
+          <Button title="OK" onPress={() => this.props.navigation.navigate('TagDetailsView')}></Button>
+          <Button title="OK" onPress={() => this.props.navigation.navigate('TagDetailsView')}></Button>
+          <Button title="OK" onPress={() => this.props.navigation.navigate('TagDetailsView')}></Button>
+          <Button title="OK" onPress={() => this.props.navigation.navigate('TagDetailsView')}></Button>
+          <Button title="OK" onPress={() => this.props.navigation.navigate('TagDetailsView')}></Button> */}
+          
         </ScrollView>
 
         <Center>
