@@ -5,15 +5,17 @@ import {
 } from 'react-native';
 
 
-import Geolocation from 'react-native-geolocation-service';
 import ExplorationView from './ExplorationView';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import TagDetailsView from './TagDetailsView';
 import { NativeBaseProvider } from 'native-base';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Turns the top bar icons dark
 StatusBar.setBarStyle("dark-content");
 
+// Makes the top bar translucent on Android devices
 if (Platform.OS === "android") {
   StatusBar.setBackgroundColor("rgba(0,0,0,0)");
   StatusBar.setTranslucent(true);
@@ -21,21 +23,9 @@ if (Platform.OS === "android") {
 
 
 
+
 const App = () => {
 
-  // GEOLOCATION
-  Geolocation.getCurrentPosition(
-    (position) => {
-      console.log(position);
-    },
-    (error) => {
-      // See error code charts below.
-      console.log(error.code, error.message);
-    },
-    { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-  );
-
-  ///////////////////////////////////
 
   const Stack = createNativeStackNavigator();
 
@@ -43,9 +33,6 @@ const App = () => {
     <NavigationContainer>
       <NativeBaseProvider>
         <Stack.Navigator>
-
-
-
 
           <Stack.Screen
             name="ExplorationView"
