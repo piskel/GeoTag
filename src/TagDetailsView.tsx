@@ -14,7 +14,7 @@ type TagDetailsViewProps = NativeStackScreenProps<RootStackParamList, 'TagDetail
 
 export default function TagDetailsView({ route, navigation }: TagDetailsViewProps) {
 
-    let coordinate = route.params.tag.coordinate;
+    let tag = route.params.tag;
     return (
         <View style={styles.container}>
             <View style={{ flex: 1 }}>
@@ -29,19 +29,19 @@ export default function TagDetailsView({ route, navigation }: TagDetailsViewProp
                     showsBuildings={true}
                     camera={{
                         altitude: 0,
-                        center: { latitude: coordinate.latitude, longitude: coordinate.longitude },
+                        center: { latitude: tag.coordinate.latitude, longitude: tag.coordinate.longitude },
                         heading: 0, // Camera rotation
                         pitch: 90, // Camera inclination
                         zoom: 15 // Camera zoom
                     }}
                 >
-                    <Marker coordinate={{ latitude: coordinate.latitude, longitude: coordinate.longitude }} pinColor={"gold"}/>
+                    <Marker coordinate={{ latitude: tag.coordinate.latitude, longitude: tag.coordinate.longitude }} pinColor={"gold"}/>
                 </MapView>
             </View>
 
             <View style={{ flex: 2.5, padding: 0 }}>
                 <Heading>
-                    kkoin
+                    {`${tag.coordinate.latitude}; ${tag.coordinate.longitude}`}
                 </Heading>
             </View>
         </View>

@@ -1,14 +1,16 @@
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
 import { Button, ScrollView, View } from "react-native";
-import MapView from "react-native-maps";
+import MapView, { Marker } from "react-native-maps";
 import { RootStackParamList } from './RootStackParams';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { styles } from './styles';
 import { Center, Modal } from 'native-base';
 import { BarCodeReadEvent, RNCamera } from 'react-native-camera';
 import Geolocation from 'react-native-geolocation-service';
-import TagStruct from './TagStruct';
+import { TagStruct } from './typedef';
+import { Text } from 'react-native-svg';
+import { ParamListBase } from '@react-navigation/routers';
 
 // TODO : Let users set their tag either public (displays them on the map)
 
@@ -36,16 +38,68 @@ import TagStruct from './TagStruct';
 //   }
 // }
 
+///////////////////////////////////////////////////////////////
+// Marker List ////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////
+
+type MarkerListProps =
+  {
+    navigation: NativeStackNavigationProp<RootStackParamList, "ExplorationView">,
+    tagList: TagStruct[]
+  }
+
+const MarkerList = ({ navigation, tagList }: MarkerListProps) => {
+
+  const markers = tagList.map((tag) =>
+    <Marker
+      key={tag.toString()}
+      coordinate={{ latitude: tag.coordinate.latitude, longitude: tag.coordinate.longitude }}
+      pinColor={"red"}
+      onPress={() => {navigation.navigate('TagDetailsView', {tag:tag});}}/>
+  );
+  return (<>{markers}</>);
+};
+
+
+///////////////////////////////////////////////////////////////
+// Button List ////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////
+
+type ButtonListProps =
+  {
+    navigation: NativeStackNavigationProp<RootStackParamList, "ExplorationView">,
+    tagList: TagStruct[]
+  }
+
+const ButtonList = ({ navigation, tagList }: ButtonListProps) => {
+  const buttons = tagList.map((tag) =>
+    <Button
+      key={tag.toString()}
+      title={`${tag.coordinate.latitude};${tag.coordinate.longitude}`}
+      onPress={() => {navigation.navigate('TagDetailsView', {tag:tag});}}
+      ></Button>
+  );
+
+  console.log(buttons.length, " buttons");
+  return (<>{buttons}</>);
+};
+
+
+///////////////////////////////////////////////////////////////
+// Exploration View ///////////////////////////////////////////
+///////////////////////////////////////////////////////////////
+
 type ExplorationViewProps = NativeStackScreenProps<RootStackParamList, 'ExplorationView'>;
 
 export interface ExplorationViewState {
-  markerList: TagStruct[],
+  tagList: TagStruct[],
   showModal: boolean,
   initialCoordinates: {
     latitude: number,
     longitude: number
   }
 };
+
 
 export default class ExplorationView
   extends React.Component<ExplorationViewProps, ExplorationViewState>
@@ -55,16 +109,24 @@ export default class ExplorationView
     // this.setState({markerList:[]})
 
     this.state = {
-      markerList: [],
+      tagList: [
+        {
+          coordinate: { latitude: 46.99099099099099, longitude: 6.947142665974343 },
+          creationDate: 0,
+          isFound: false
+        }
+      ],
       showModal: false,
-      initialCoordinates:{
-        latitude:0, 
-        longitude:0}
+      initialCoordinates: {
+        latitude: 0,
+        longitude: 0
+      }
     }
 
-    this.updateMarkers = this.updateMarkers.bind(this);
+    this.updateTags = this.updateTags.bind(this);
     this.setShowModal = this.setShowModal.bind(this);
     this.codeBarRead = this.codeBarRead.bind(this);
+
   }
 
   setShowModal(showModal: boolean) {
@@ -83,32 +145,45 @@ export default class ExplorationView
   /**
    * Updates the list of markers that are displayed on the map.
    */
-  updateMarkers() {
-
+  updateTags() {
+    const currentTagList = this.state.tagList;
+    currentTagList.push(
+      {
+        coordinate: { latitude: 46.099099099099, longitude: 6.947142665974343 },
+        creationDate: 0,
+        isFound: false
+      }
+    );
+    this.setState({
+      tagList: currentTagList
+    });
   }
 
   /**
    * Runs once the component is loaded.
    */
   componentDidMount() {
-    this.updateMarkers();
+    // this.updateTags();
 
     Geolocation.getCurrentPosition(
       (position) => {
-        this.setState({initialCoordinates:
+        this.setState({
+          initialCoordinates:
           {
-            latitude:position.coords.latitude,
-            longitude:position.coords.longitude,
-          }});
-        // console.log(position);
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          }
+        });
+        console.log(position);
       },
       (error) => {
         // See error code charts below.
         console.log(error.code, error.message);
       },
       {
-        enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-      );
+        enableHighAccuracy: true, timeout: 15000, maximumAge: 10000
+      }
+    );
   }
 
 
@@ -126,37 +201,35 @@ export default class ExplorationView
             showsBuildings={true}
 
             camera={{
-              altitude:0,
-              center:{
-                latitude:this.state.initialCoordinates.latitude,
-                longitude:this.state.initialCoordinates.longitude
+              altitude: 0,
+              center: {
+                latitude: this.state.initialCoordinates.latitude,
+                longitude: this.state.initialCoordinates.longitude
               },
-              heading:0, // Camera rotation
-              pitch:90, // Camera inclination
-              zoom:13 // Camera zoom
-          }}
+              heading: 0, // Camera rotation
+              pitch: 90, // Camera inclination
+              zoom: 13 // Camera zoom
+            }}
           >
-            {this.state.markerList}
+            <MarkerList navigation={this.props.navigation} tagList={this.state.tagList} />
           </MapView>
+
           <View style={styles.scanButtonView}>
-            <Icon.Button iconStyle={styles.scanButtonStyle} style={styles.scanButton} name="qrcode" size={50}
-              onPress={(e) => this.setShowModal(true)}
-            ></Icon.Button>
+
+            <Icon.Button
+              iconStyle={styles.scanButtonStyle}
+              style={styles.scanButton}
+              name="qrcode"
+              size={50}
+              onPress={(e) => this.setShowModal(true)}>
+            </Icon.Button>
 
           </View>
         </View>
 
-        <ScrollView style={styles.scrollview}>
 
-          <Button title="OK" onPress={() => this.props.navigation.navigate('TagDetailsView', {tag:{coordinate:{latitude:0, longitude:0}, creationDate:Date.now(), isFound:false}})}></Button>
-          {/* <Button title="OK" onPress={() => this.props.navigation.navigate('TagDetailsView')}></Button>
-          <Button title="OK" onPress={() => this.props.navigation.navigate('TagDetailsView')}></Button>
-          <Button title="OK" onPress={() => this.props.navigation.navigate('TagDetailsView')}></Button>
-          <Button title="OK" onPress={() => this.props.navigation.navigate('TagDetailsView')}></Button>
-          <Button title="OK" onPress={() => this.props.navigation.navigate('TagDetailsView')}></Button>
-          <Button title="OK" onPress={() => this.props.navigation.navigate('TagDetailsView')}></Button>
-          <Button title="OK" onPress={() => this.props.navigation.navigate('TagDetailsView')}></Button> */}
-          
+        <ScrollView style={styles.scrollview}>
+          <ButtonList navigation={this.props.navigation} tagList={this.state.tagList} />
         </ScrollView>
 
         <Center>
@@ -164,11 +237,11 @@ export default class ExplorationView
             <Modal.Content style={{}}>
               <Modal.CloseButton />
               <Modal.Header style={{}}>Scan a tag</Modal.Header>
-              <Modal.Body style={{ alignItems:"center"}}>
+              <Modal.Body style={{ alignItems: "center" }}>
                 <RNCamera
                   ratio={'4:4'}
-                  style={{ height: 280, width:"110%"}}
-                  onBarCodeRead={(e)=>{this.codeBarRead(e);}}
+                  style={{ height: 280, width: "110%" }}
+                  onBarCodeRead={(e) => { this.codeBarRead(e); }}
                   captureAudio={false}
                 >
                 </RNCamera>

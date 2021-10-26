@@ -11,7 +11,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import TagDetailsView from './TagDetailsView';
 import { NativeBaseProvider } from 'native-base';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import TagStruct from './TagStruct';
+import { TagStruct } from './typedef';
 
 // Turns the top bar icons dark
 StatusBar.setBarStyle("dark-content");
