@@ -52,7 +52,7 @@ const MarkerList = ({ navigation, tagList }: MarkerListProps) => {
 
   const markers = tagList.map((tag) =>
     <Marker
-      key={tag.toString()}
+      key={`${tag.coordinate.latitude}, ${tag.coordinate.longitude}, ${tag.creationDate}`}
       coordinate={{ latitude: tag.coordinate.latitude, longitude: tag.coordinate.longitude }}
       pinColor={"red"}
       onPress={() => {navigation.navigate('TagDetailsView', {tag:tag});}}/>
@@ -74,7 +74,7 @@ type ButtonListProps =
 const ButtonList = ({ navigation, tagList }: ButtonListProps) => {
   const buttons = tagList.map((tag) =>
     <Button
-      key={tag.toString()}
+      key={`${tag.coordinate.latitude}, ${tag.coordinate.longitude}, ${tag.creationDate}`}
       title={`${tag.coordinate.latitude};${tag.coordinate.longitude}`}
       onPress={() => {navigation.navigate('TagDetailsView', {tag:tag});}}
       ></Button>
@@ -112,6 +112,11 @@ export default class ExplorationView
       tagList: [
         {
           coordinate: { latitude: 46.99099099099099, longitude: 6.947142665974343 },
+          creationDate: 0,
+          isFound: false
+        },
+        {
+          coordinate: { latitude: 46.0, longitude: 6.0 },
           creationDate: 0,
           isFound: false
         }
