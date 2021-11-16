@@ -12,7 +12,7 @@ import { Text } from 'react-native-svg';
 import { ParamListBase } from '@react-navigation/routers';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { TagStruct } from './typedef';
-import { ONLINE_TAG_LIST_KEY } from './constants';
+import { FOUND_TAG_LIST_KEY, ONLINE_TAG_LIST_KEY } from './Constants';
 
 // TODO : Let users set their tag either public (displays them on the map)
 
@@ -161,13 +161,13 @@ export default class ExplorationView
    */
   updateTags() {
     const currentTagList = this.state.tagList;
-    currentTagList.push(
-      {
-        coordinate: { latitude: 46.099099099099, longitude: 6.947142665974343 },
-        creationDate: 0,
-        isFound: false
-      }
-    );
+    // currentTagList.push(
+    //   {
+    //     coordinate: { latitude: 46.099099099099, longitude: 6.947142665974343 },
+    //     creationDate: 0,
+    //     isFound: false
+    //   }
+    // );
     this.setState({
       tagList: currentTagList
     });
@@ -200,9 +200,11 @@ export default class ExplorationView
     );
 
 
-    await getData(ONLINE_TAG_LIST_KEY, (value:string) => {
+    await getData(FOUND_TAG_LIST_KEY, (value:string) => {
       const tagList = JSON.parse(value);
+
       console.log(tagList);
+
       this.state = {
         tagList: tagList,
         initialCoordinates: {
@@ -212,6 +214,7 @@ export default class ExplorationView
         showModal: false
       }
     });
+    this.updateTags();
 
   }
 

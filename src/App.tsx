@@ -11,7 +11,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import TagDetailsView from './TagDetailsView';
 import { NativeBaseProvider } from 'native-base';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { FIRST_START_KEY, FOUND_TAG_LIST_KEY, ONLINE_TAG_LIST_KEY } from './constants';
+import { FIRST_START_KEY, FOUND_TAG_LIST_KEY, ONLINE_TAG_LIST_KEY } from './Constants';
 
 
 
@@ -23,7 +23,6 @@ if (Platform.OS === "android") {
   StatusBar.setBackgroundColor("rgba(0,0,0,0)");
   StatusBar.setTranslucent(true);
 }
-
 
 
 
