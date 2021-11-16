@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Platform,
   StatusBar,
@@ -11,7 +11,9 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import TagDetailsView from './TagDetailsView';
 import { NativeBaseProvider } from 'native-base';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { TagStruct } from './typedef';
+import { FIRST_START_KEY, FOUND_TAG_LIST_KEY, ONLINE_TAG_LIST_KEY } from './constants';
+
+
 
 // Turns the top bar icons dark
 StatusBar.setBarStyle("dark-content");
@@ -23,49 +25,80 @@ if (Platform.OS === "android") {
 }
 
 
-async function resetConfiguration()
+
+
+// Resets the app configuration.
+const resetConfiguration = async () =>
 {
-  // Clears all the storage.
-  AsyncStorage.clear();
-  await AsyncStorage.setItem('first_start', 'false');
+  console.log("Resetting configuration...")
+  try
+  {
 
-  let tagList:TagStruct[] = [] 
-  let jsonTagList = JSON.stringify(tagList); 
+    let test = JSON.stringify([
+      {
+        coordinate: { latitude: 46.99099099099099, longitude: 6.947142665974343 },
+        creationDate: 0,
+        isFound: false
+      },
+      {
+        coordinate: { latitude: 46.0, longitude: 6.0 },
+        creationDate: 0,
+        isFound: false
+      }
+    ]);
+    await AsyncStorage.clear();
 
-
-  await AsyncStorage.multiSet([
-    ['first_start','false'],
-    ['TagList',jsonTagList]
-  ]);
+    await AsyncStorage.multiSet([
+      [FIRST_START_KEY,'false'],
+      [ONLINE_TAG_LIST_KEY,"[]"],
+      [FOUND_TAG_LIST_KEY,test]
+    ]);
+  }
+  catch(error)
+  {
+    console.log(error);
+  }
 }
+
+
 
 /**
  * Checks if the app is being launched for the first time
  */
-async function checkFirstStart()
+const checkFirstStart = async () =>
 {
+  // Debug only : resets the configuration
+  // await AsyncStorage.clear();
   try
   {
     // TODO : Should use proper JSON parsing instead of string comparison here.
-    const firstStart = await AsyncStorage.getItem('first_start');
+    const firstStart = await AsyncStorage.getItem(FIRST_START_KEY);
+
     if (firstStart === null || firstStart == "true")
     {
       console.log('First launch');
-      resetConfiguration();
+      await resetConfiguration();
     }
 
   }
   catch(e)
   {
+    // Maybe also reset the configuration here?
     console.error(e);
   }
 }
 
+const initApp = async () =>
+{
+  await checkFirstStart();
+}
 
 
 const App = () => {
 
-  checkFirstStart();
+  useEffect(() => {
+    initApp();
+  }, []);  
 
   const Stack = createNativeStackNavigator();
 

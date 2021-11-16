@@ -8,35 +8,40 @@ import { styles } from './styles';
 import { Center, Modal } from 'native-base';
 import { BarCodeReadEvent, RNCamera } from 'react-native-camera';
 import Geolocation from 'react-native-geolocation-service';
-import { TagStruct } from './typedef';
 import { Text } from 'react-native-svg';
 import { ParamListBase } from '@react-navigation/routers';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { TagStruct } from './typedef';
+import { ONLINE_TAG_LIST_KEY } from './constants';
 
 // TODO : Let users set their tag either public (displays them on the map)
 
-// const storeData = async (value:any) =>
-// {
-//   try
-//   {
-//     await AsyncStorage.setItem('@storage_Key', value);
-//   }
-//   catch(e)
-//   {
-//     console.error(e);
-//   }
-// }
+const storeData = async (key:string, value:any) =>
+{
+  try
+  {
+    await AsyncStorage.setItem(key, value);
+  }
+  catch(e)
+  {
+    console.error(e);
+  }
+}
 
 
-// const getData = async () => {
-//   try {
-//     const value = await AsyncStorage.getItem('@storage_Key')
-//     if(value !== null) {
-//       console.log(value)
-//     }
-//   } catch(e) {
-//     // error reading value
-//   }
-// }
+const getData = async (key:string, callback: (value:string)=>void) => {
+  try {
+    console.log("Accessing data storage");
+    const value = await AsyncStorage.getItem(key);
+    console.log(key, " : ", value);
+    if(value !== null) {
+      callback(value);
+    }
+  } catch(e) {
+    // error reading value
+    console.log("Error while accessing data storage");
+  }
+}
 
 ///////////////////////////////////////////////////////////////
 // Marker List ////////////////////////////////////////////////
@@ -47,6 +52,7 @@ type MarkerListProps =
     navigation: NativeStackNavigationProp<RootStackParamList, "ExplorationView">,
     tagList: TagStruct[]
   }
+
 
 const MarkerList = ({ navigation, tagList }: MarkerListProps) => {
 
@@ -108,18 +114,20 @@ export default class ExplorationView
     super(props);
     // this.setState({markerList:[]})
 
+
+
     this.state = {
       tagList: [
-        {
-          coordinate: { latitude: 46.99099099099099, longitude: 6.947142665974343 },
-          creationDate: 0,
-          isFound: false
-        },
-        {
-          coordinate: { latitude: 46.0, longitude: 6.0 },
-          creationDate: 0,
-          isFound: false
-        }
+        // {
+        //   coordinate: { latitude: 46.99099099099099, longitude: 6.947142665974343 },
+        //   creationDate: 0,
+        //   isFound: false
+        // },
+        // {
+        //   coordinate: { latitude: 46.0, longitude: 6.0 },
+        //   creationDate: 0,
+        //   isFound: false
+        // }
       ],
       showModal: false,
       initialCoordinates: {
@@ -136,6 +144,7 @@ export default class ExplorationView
 
   setShowModal(showModal: boolean) {
     this.setState({ showModal: showModal });
+    this.updateTags();
   }
 
   /**
@@ -167,9 +176,9 @@ export default class ExplorationView
   /**
    * Runs once the component is loaded.
    */
-  componentDidMount() {
-    // this.updateTags();
+  async componentDidMount() {
 
+    // Get the initial coordinates
     Geolocation.getCurrentPosition(
       (position) => {
         this.setState({
@@ -189,6 +198,21 @@ export default class ExplorationView
         enableHighAccuracy: true, timeout: 15000, maximumAge: 10000
       }
     );
+
+
+    await getData(ONLINE_TAG_LIST_KEY, (value:string) => {
+      const tagList = JSON.parse(value);
+      console.log(tagList);
+      this.state = {
+        tagList: tagList,
+        initialCoordinates: {
+          latitude: 0,
+          longitude: 0
+        },
+        showModal: false
+      }
+    });
+
   }
 
 

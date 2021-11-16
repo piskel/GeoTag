@@ -40,8 +40,8 @@ export default function TagDetailsView({ route, navigation }: TagDetailsViewProp
             </View>
 
             <View style={{ flex: 2.5, padding: 0 }}>
-                <Heading>
-                    {`${tag.coordinate.latitude}; ${tag.coordinate.longitude}`}
+                <Heading size="xl">
+                    Tag Informations
                 </Heading>
             </View>
         </View>
