@@ -8,36 +8,31 @@ import { styles } from './styles';
 import { Center, Modal } from 'native-base';
 import { BarCodeReadEvent, RNCamera } from 'react-native-camera';
 import Geolocation from 'react-native-geolocation-service';
-import { Text } from 'react-native-svg';
-import { ParamListBase } from '@react-navigation/routers';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { TagStruct } from './typedef';
 import { FOUND_TAG_LIST_KEY, ONLINE_TAG_LIST_KEY } from './Constants';
 
 // TODO : Let users set their tag either public (displays them on the map)
 
-const storeData = async (key:string, value:any) =>
-{
-  try
-  {
+const storeData = async (key: string, value: any) => {
+  try {
     await AsyncStorage.setItem(key, value);
   }
-  catch(e)
-  {
+  catch (e) {
     console.error(e);
   }
 }
 
 
-const getData = async (key:string, callback: (value:string)=>void) => {
+const getData = async (key: string, callback: (value: string) => void) => {
   try {
     console.log("Accessing data storage");
     const value = await AsyncStorage.getItem(key);
     console.log(key, " : ", value);
-    if(value !== null) {
+    if (value !== null) {
       callback(value);
     }
-  } catch(e) {
+  } catch (e) {
     // error reading value
     console.log("Error while accessing data storage");
   }
@@ -60,8 +55,8 @@ const MarkerList = ({ navigation, tagList }: MarkerListProps) => {
     <Marker
       key={`${tag.coordinate.latitude}, ${tag.coordinate.longitude}, ${tag.creationDate}`}
       coordinate={{ latitude: tag.coordinate.latitude, longitude: tag.coordinate.longitude }}
-      pinColor={"red"}
-      onPress={() => {navigation.navigate('TagDetailsView', {tag:tag});}}/>
+      pinColor={tag.isFound ? "blue" : "red"}
+      onPress={() => { navigation.navigate('TagDetailsView', { tag: tag }); }} />
   );
   return (<>{markers}</>);
 };
@@ -82,8 +77,8 @@ const ButtonList = ({ navigation, tagList }: ButtonListProps) => {
     <Button
       key={`${tag.coordinate.latitude}, ${tag.coordinate.longitude}, ${tag.creationDate}`}
       title={`${tag.coordinate.latitude};${tag.coordinate.longitude}`}
-      onPress={() => {navigation.navigate('TagDetailsView', {tag:tag});}}
-      ></Button>
+      onPress={() => { navigation.navigate('TagDetailsView', { tag: tag }); }}
+    ></Button>
   );
 
   console.log(buttons.length, " buttons");
@@ -117,18 +112,7 @@ export default class ExplorationView
 
 
     this.state = {
-      tagList: [
-        // {
-        //   coordinate: { latitude: 46.99099099099099, longitude: 6.947142665974343 },
-        //   creationDate: 0,
-        //   isFound: false
-        // },
-        // {
-        //   coordinate: { latitude: 46.0, longitude: 6.0 },
-        //   creationDate: 0,
-        //   isFound: false
-        // }
-      ],
+      tagList: [],
       showModal: false,
       initialCoordinates: {
         latitude: 0,
@@ -161,13 +145,7 @@ export default class ExplorationView
    */
   updateTags() {
     const currentTagList = this.state.tagList;
-    // currentTagList.push(
-    //   {
-    //     coordinate: { latitude: 46.099099099099, longitude: 6.947142665974343 },
-    //     creationDate: 0,
-    //     isFound: false
-    //   }
-    // );
+
     this.setState({
       tagList: currentTagList
     });
@@ -178,7 +156,7 @@ export default class ExplorationView
    */
   async componentDidMount() {
 
-    // Get the initial coordinates
+    // Get the initial coordinates of the user
     Geolocation.getCurrentPosition(
       (position) => {
         this.setState({
@@ -199,21 +177,17 @@ export default class ExplorationView
       }
     );
 
+    // TODO : Use DataTools
+    // Get the list of tags from the storage and update the state
+    const foundTagList = await AsyncStorage.getItem(FOUND_TAG_LIST_KEY) as string;
+    const onlineTagList = await AsyncStorage.getItem(ONLINE_TAG_LIST_KEY) as string;
+    
+    // Merge the two lists
+    const tagList = [...JSON.parse(foundTagList), ...JSON.parse(onlineTagList)];
+    this.setState({ tagList: tagList });
 
-    await getData(FOUND_TAG_LIST_KEY, (value:string) => {
-      const tagList = JSON.parse(value);
+    
 
-      console.log(tagList);
-
-      this.state = {
-        tagList: tagList,
-        initialCoordinates: {
-          latitude: 0,
-          longitude: 0
-        },
-        showModal: false
-      }
-    });
     this.updateTags();
 
   }

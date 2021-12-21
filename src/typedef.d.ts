@@ -10,3 +10,4 @@ export interface TagStruct
     isFound: boolean,
     findDate?: number
 }
+

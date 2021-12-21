@@ -12,6 +12,9 @@ import TagDetailsView from './TagDetailsView';
 import { NativeBaseProvider } from 'native-base';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FIRST_START_KEY, FOUND_TAG_LIST_KEY, ONLINE_TAG_LIST_KEY } from './Constants';
+import { TagManager } from './TagManager';
+import {getData} from  './DataTools';
+
 
 
 
@@ -90,6 +93,10 @@ const checkFirstStart = async () =>
 const initApp = async () =>
 {
   await checkFirstStart();
+  const tm = new TagManager("http://172.20.10.9:1234");
+  await tm.fetchOnlineTags();
+  console.log("Loaded online tags")
+  console.log(await AsyncStorage.getItem(ONLINE_TAG_LIST_KEY));
 }
 
 
