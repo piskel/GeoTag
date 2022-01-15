@@ -1,13 +1,14 @@
 
 export interface TagStruct
 {
+    location: string;
     coordinate:
     {
         latitude: number,
         longitude: number
     },
     creationDate: number,
-    isFound: boolean,
+    isFound?: boolean,
     findDate?: number
 }
 

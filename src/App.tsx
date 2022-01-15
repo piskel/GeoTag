@@ -10,10 +10,9 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import TagDetailsView from './TagDetailsView';
 import { NativeBaseProvider } from 'native-base';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { FIRST_START_KEY, FOUND_TAG_LIST_KEY, ONLINE_TAG_LIST_KEY } from './Constants';
 import { TagManager } from './TagManager';
-import {getData} from  './DataTools';
+import { initConfig, loadMockConfig, setFirstStart } from './ConfigManager';
+
 
 
 
@@ -29,74 +28,15 @@ if (Platform.OS === "android") {
 
 
 
-// Resets the app configuration.
-const resetConfiguration = async () =>
-{
-  console.log("Resetting configuration...")
-  try
-  {
-
-    let test = JSON.stringify([
-      {
-        coordinate: { latitude: 46.99099099099099, longitude: 6.947142665974343 },
-        creationDate: 0,
-        isFound: false
-      },
-      {
-        coordinate: { latitude: 46.0, longitude: 6.0 },
-        creationDate: 0,
-        isFound: false
-      }
-    ]);
-    await AsyncStorage.clear();
-
-    await AsyncStorage.multiSet([
-      [FIRST_START_KEY,'false'],
-      [ONLINE_TAG_LIST_KEY,"[]"],
-      [FOUND_TAG_LIST_KEY,test]
-    ]);
-  }
-  catch(error)
-  {
-    console.log(error);
-  }
-}
-
-
-
-/**
- * Checks if the app is being launched for the first time
- */
-const checkFirstStart = async () =>
-{
-  // Debug only : resets the configuration
-  // await AsyncStorage.clear();
-  try
-  {
-    // TODO : Should use proper JSON parsing instead of string comparison here.
-    const firstStart = await AsyncStorage.getItem(FIRST_START_KEY);
-
-    if (firstStart === null || firstStart == "true")
-    {
-      console.log('First launch');
-      await resetConfiguration();
-    }
-
-  }
-  catch(e)
-  {
-    // Maybe also reset the configuration here?
-    console.error(e);
-  }
-}
-
 const initApp = async () =>
 {
-  await checkFirstStart();
-  const tm = new TagManager("http://172.20.10.9:1234");
+  await setFirstStart(); // Debug only
+  await initConfig();
+  // await loadMockConfig(); // Debug only
+
+  const tm = new TagManager("http://192.168.1.113:1234");
   await tm.fetchOnlineTags();
-  console.log("Loaded online tags")
-  console.log(await AsyncStorage.getItem(ONLINE_TAG_LIST_KEY));
+  // console.log("Loaded online tags");
 }
 
 

@@ -1,42 +1,19 @@
 import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
-import { Button, ScrollView, View } from "react-native";
+import { ScrollView, TouchableOpacity, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { RootStackParamList } from './RootStackParams';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { styles } from './styles';
-import { Center, Modal } from 'native-base';
+import { Box, Center, Heading, HStack, Modal, Spacer, Stagger, VStack } from 'native-base';
 import { BarCodeReadEvent, RNCamera } from 'react-native-camera';
 import Geolocation from 'react-native-geolocation-service';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { TagStruct } from './typedef';
 import { FOUND_TAG_LIST_KEY, ONLINE_TAG_LIST_KEY } from './Constants';
+import { marginBottom } from 'styled-system';
 
 // TODO : Let users set their tag either public (displays them on the map)
-
-const storeData = async (key: string, value: any) => {
-  try {
-    await AsyncStorage.setItem(key, value);
-  }
-  catch (e) {
-    console.error(e);
-  }
-}
-
-
-const getData = async (key: string, callback: (value: string) => void) => {
-  try {
-    console.log("Accessing data storage");
-    const value = await AsyncStorage.getItem(key);
-    console.log(key, " : ", value);
-    if (value !== null) {
-      callback(value);
-    }
-  } catch (e) {
-    // error reading value
-    console.log("Error while accessing data storage");
-  }
-}
 
 ///////////////////////////////////////////////////////////////
 // Marker List ////////////////////////////////////////////////
@@ -66,22 +43,54 @@ const MarkerList = ({ navigation, tagList }: MarkerListProps) => {
 // Button List ////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////
 
-type ButtonListProps =
+
+
+
+type GeoTagButtonProps =
   {
     navigation: NativeStackNavigationProp<RootStackParamList, "ExplorationView">,
-    tagList: TagStruct[]
+    tag: TagStruct
   }
 
-const ButtonList = ({ navigation, tagList }: ButtonListProps) => {
-  const buttons = tagList.map((tag) =>
-    <Button
-      key={`${tag.coordinate.latitude}, ${tag.coordinate.longitude}, ${tag.creationDate}`}
-      title={`${tag.coordinate.latitude};${tag.coordinate.longitude}`}
-      onPress={() => { navigation.navigate('TagDetailsView', { tag: tag }); }}
-    ></Button>
-  );
 
-  console.log(buttons.length, " buttons");
+
+
+const GeoTagButton = ({ navigation, tag }: GeoTagButtonProps) => {
+  console.log(tag);
+  return (
+    <TouchableOpacity
+      onPress={() => { navigation.navigate('TagDetailsView', { tag: tag }); }}
+      style={{marginBottom:10}}
+
+    >
+      <Box
+      style={{
+        backgroundColor: "#fff",
+        borderRadius: 5,
+      }}>
+        <Heading size="xl" textAlign={"center"} >
+        {tag.location}
+        </Heading>
+      </Box>
+    </TouchableOpacity>
+    );
+    }
+    
+
+
+type ButtonListProps =
+{
+  navigation: NativeStackNavigationProp<RootStackParamList, "ExplorationView">,
+  tagList: TagStruct[]
+}
+
+const ButtonList = ({ navigation, tagList }: ButtonListProps) => {
+
+  const buttons = tagList.map((tag, i) =>
+    <GeoTagButton navigation={navigation} tag={tag} key={i} />
+  );
+  
+
   return (<>{buttons}</>);
 };
 
@@ -95,6 +104,7 @@ type ExplorationViewProps = NativeStackScreenProps<RootStackParamList, 'Explorat
 export interface ExplorationViewState {
   tagList: TagStruct[],
   showModal: boolean,
+  showStagger: boolean,
   initialCoordinates: {
     latitude: number,
     longitude: number
@@ -114,6 +124,7 @@ export default class ExplorationView
     this.state = {
       tagList: [],
       showModal: false,
+      showStagger: false,
       initialCoordinates: {
         latitude: 0,
         longitude: 0
@@ -128,7 +139,10 @@ export default class ExplorationView
 
   setShowModal(showModal: boolean) {
     this.setState({ showModal: showModal });
-    this.updateTags();
+  }
+
+  setShowStagger(showStagger: boolean) {
+    this.setState({ showStagger: showStagger });
   }
 
   /**
@@ -137,17 +151,25 @@ export default class ExplorationView
    */
   codeBarRead(event: BarCodeReadEvent) {
     this.setShowModal(false);
-    console.log(event);
   }
 
   /**
    * Updates the list of markers that are displayed on the map.
    */
-  updateTags() {
-    const currentTagList = this.state.tagList;
+  async updateTags() {
+    // const currentTagList = this.state.tagList;
+
+    // const foundTagList = await AsyncStorage.getItem(FOUND_TAG_LIST_KEY) as string;
+    const onlineTagList = await AsyncStorage.getItem(ONLINE_TAG_LIST_KEY) as string;
+
+    const onlineTagListJSON = JSON.parse(onlineTagList);
+
+
+    console.log("onlineTagListJSON", onlineTagListJSON);
+
 
     this.setState({
-      tagList: currentTagList
+      tagList: onlineTagListJSON
     });
   }
 
@@ -166,7 +188,7 @@ export default class ExplorationView
             longitude: position.coords.longitude,
           }
         });
-        console.log(position);
+        // console.log(position);
       },
       (error) => {
         // See error code charts below.
@@ -177,14 +199,15 @@ export default class ExplorationView
       }
     );
 
-    // TODO : Use DataTools
     // Get the list of tags from the storage and update the state
     const foundTagList = await AsyncStorage.getItem(FOUND_TAG_LIST_KEY) as string;
     const onlineTagList = await AsyncStorage.getItem(ONLINE_TAG_LIST_KEY) as string;
     
     // Merge the two lists
-    const tagList = [...JSON.parse(foundTagList), ...JSON.parse(onlineTagList)];
-    this.setState({ tagList: tagList });
+    // console.log(foundTagList);
+    // console.log(onlineTagList);
+    // const tagList = [...JSON.parse(foundTagList), ...JSON.parse(onlineTagList)];
+    // this.setState({ tagList:tagList });
 
     
 
@@ -219,24 +242,54 @@ export default class ExplorationView
           >
             <MarkerList navigation={this.props.navigation} tagList={this.state.tagList} />
           </MapView>
+          
+          
+          <View style={styles.navView}>
 
-          <View style={styles.scanButtonView}>
+            <Stagger visible={this.state.showStagger}>
+              <Icon name="bomb"color="#f0f"size={25}></Icon>
+              <Icon name="skull"color="#f00"size={25}></Icon>
+              <Icon name="radioactive"color="#00f"size={25}></Icon>
+              <Icon name="biohazard"color="#ff0"size={25}></Icon>
+              <Icon name="emoticon-happy"color="#0ff"size={25}></Icon>
+            </Stagger>
 
-            <Icon.Button
-              iconStyle={styles.scanButtonStyle}
-              style={styles.scanButton}
-              name="qrcode"
-              size={50}
-              onPress={(e) => this.setShowModal(true)}>
-            </Icon.Button>
 
+            <View style={{marginBottom:10}}>
+              <Icon.Button
+                iconStyle={styles.scanButtonStyle}
+                style={styles.staggerButton}
+                name="knife"
+                size={50}
+                onPress={(e) => this.setShowStagger(!this.state.showStagger)}>
+              </Icon.Button>
+            </View>
+
+            {/* TODO: Add stagger */}
+              
+            <View style={styles.scanButtonView}>
+              <Icon.Button
+                iconStyle={styles.scanButtonStyle}
+                style={styles.scanButton}
+                name="qrcode"
+                size={50}
+                onPress={(e) => this.setShowModal(true)}>
+              </Icon.Button>
+            </View>
+
+            
           </View>
+
+
+          <ScrollView style={styles.buttonListView}>
+            <ButtonList navigation={this.props.navigation} tagList={this.state.tagList} />
+          </ScrollView>
+
+
         </View>
 
 
-        <ScrollView style={styles.scrollview}>
-          <ButtonList navigation={this.props.navigation} tagList={this.state.tagList} />
-        </ScrollView>
+
 
         <Center>
           <Modal style={{}} isOpen={this.state.showModal} onClose={() => this.setShowModal(false)} size="lg">

@@ -12,14 +12,14 @@ export class TagManager
         this.server_url = server_url;
     }
 
-    public async getOnlineTags(): Promise<TagStruct[]>
+    public static async getOnlineTags(): Promise<TagStruct[]>
     {
         const jsonOnlineTags = await AsyncStorage.getItem(ONLINE_TAG_LIST_KEY);
         const onlineTagsList = jsonOnlineTags ? JSON.parse(jsonOnlineTags) : [];
         return onlineTagsList;
     }
 
-    public async getFoundTags(): Promise<TagStruct[]>
+    public static async getFoundTags(): Promise<TagStruct[]>
     {
         const jsonFoundTags = await AsyncStorage.getItem(FOUND_TAG_LIST_KEY);
         const foundTagsList = jsonFoundTags ? JSON.parse(jsonFoundTags) : [];
@@ -35,20 +35,31 @@ export class TagManager
 
         let xhttp = new XMLHttpRequest();
 
-        xhttp.onreadystatechange = () =>
+        xhttp.onreadystatechange = async () =>
         {
             console.log("Fetched online tags");
             // console.log(JSON.stringify(xhttp, null, 2));
-            // console.log(xhttp.responseText);
+            // console.log(xhttp);
+
+            // TODO: Make sure that the response is valid
             let jsonOnlineTags = xhttp.responseText;
-            AsyncStorage.setItem(ONLINE_TAG_LIST_KEY, jsonOnlineTags);
+            await AsyncStorage.setItem(ONLINE_TAG_LIST_KEY, jsonOnlineTags);
         }
 
-
+        console.log("Fetching online tags from " + this.server_url+"/api/geotag");
         // Connection is closed after the response is received
-        xhttp.open("GET", this.server_url + "/api/v1/tags", true);
-    
+        xhttp.open("GET", this.server_url + "/api/geotag", true);
         xhttp.send();
+
+
+        // Fetching tags from Flask API server
+        
+        // GET /api/geotag
+        // let response = await fetch(this.server_url + "/api/geotag");
+        // let jsonOnlineTags = await response.json();
+        // console.log("Fetched online tags");
+        // console.log(jsonOnlineTags);
+
 
     }
 
