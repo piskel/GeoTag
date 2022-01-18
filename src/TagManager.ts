@@ -1,17 +1,34 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { TAG_LIST_KEY } from "./Constants";
+import { SERVER_URL, TAG_LIST_KEY } from "./Constants";
 import { CoordinateStruct, TagStruct } from "./typedef";
-
+import Geolocation from 'react-native-geolocation-service';
 
 /**
  * Manages everything tag related.
  */
 export class TagManager {
+
+    private static instance: TagManager;
+
     private server_url: string;
 
-    constructor(server_url: string) {
-        this.server_url = server_url;
+    private constructor() {
+        // TODO: Move this, might be useless
+        this.server_url = SERVER_URL;
     }
+
+    /**
+     * Returns the instance of the TagManager.
+     * @returns Instance of TagManager.
+     */
+    public static getInstance(): TagManager {
+        if (TagManager.instance === undefined) {
+            TagManager.instance = new TagManager();
+        }
+        return TagManager.instance;
+    }
+
+
 
     /**
      * Clears all tags from local storage.
@@ -82,17 +99,6 @@ export class TagManager {
         return tagId;
     }
 
-    // /**
-    //  * Retrieves a tag from their id in the list.
-    //  * @param tagId The id of the tag.
-    //  * @returns The tag if found, null otherwise.
-    //  */
-    // public static async getTagFromId(tagId: number): Promise<TagStruct> {
-    //     // TODO: Check if the id is valid
-    //     let tagList = await TagManager.getTags();
-    //     return tagList[tagId];
-    // }
-
 
     /**
      * Fetches tags from the server and adds them to local storage.
@@ -106,14 +112,23 @@ export class TagManager {
             console.log("Fetched online tags");
             let jsonOnlineTags = xhttp.responseText;
 
-            // TODO: Check for errors in the response
-            let onlineTagsList = JSON.parse(jsonOnlineTags) as TagStruct[];
+            try {
+                // TODO: Check for errors in the response
 
-            // TODO: Remove tags that are not present in the online list
+                let onlineTagsList = JSON.parse(jsonOnlineTags) as TagStruct[];
+                console.log("Parse successful");
 
-            onlineTagsList.forEach(onlineTag => {
-                TagManager.addTag(onlineTag, true);
-            });
+                // TODO: Remove tags that are not present in the online list
+
+                for (let i = 0; i < onlineTagsList.length; i++) {
+                    let onlineTag = onlineTagsList[i];
+                    await TagManager.addTag(onlineTag, true);
+                }
+            }
+            catch (e) {
+                // console.log("Error parsing JSON");
+                // console.log(e);
+            }
 
         }
 
@@ -146,6 +161,26 @@ export class TagManager {
         xhttp.send(JSON.stringify({ latitude: coordinates.latitude, longitude: coordinates.longitude }));
     }
 
+    /**
+     * Returns de distance between two coordinates.
+     * @param c1 Coordinate 1.
+     * @param c2 Coordinate 2.
+     */
+    public static getDistance(c1: CoordinateStruct, c2: CoordinateStruct): number {
+        // TODO : Add sources
+
+        let R = 6371e3; // metres
+        let φ1 = c1.latitude * Math.PI / 180;
+        let φ2 = c2.latitude * Math.PI / 180;
+        let Δφ = (c2.latitude - c1.latitude) * Math.PI / 180;
+        let Δλ = (c2.longitude - c1.longitude) * Math.PI / 180;
+
+        let a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        let d = R * c;
+        return d;
+    }
 
     /**
      * Check if the scanned tag is valid.
@@ -164,9 +199,23 @@ export class TagManager {
         }
 
         // We check the distance between the tag and the user's location
-        let tagList = await TagManager.getTags();
-        let tag = tagList[tagId];
+        // let tagList = await TagManager.getTags();
+        // let tag = tagList[tagId];
         // let userLocation = await LocationManager.getLocation();
+        Geolocation.getCurrentPosition(
+            (position) => {
+                // Make sure the tag is not too far away
+                let distance = TagManager.getDistance(coordinates, { latitude: position.coords.latitude, longitude: position.coords.longitude });
+
+                console.log("Distance between tag and user: " + distance);
+            },
+            (error) => {
+                console.log(error.code, error.message);
+            },
+            {
+                enableHighAccuracy: true, timeout: 15000/*, maximumAge: 10000*/
+            }
+        );
 
 
         return false;

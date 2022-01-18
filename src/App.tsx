@@ -34,11 +34,10 @@ const initApp = async () =>
   await initConfig();
   // await loadMockConfig(); // Debug only
 
-  const tm = new TagManager("http://192.168.1.113:1234");
+  const tm = TagManager.getInstance();
   await tm.updateTagsFromServer();
-  // console.log("Loaded online tags");
 }
-
+ 
 
 const App = () => {
 

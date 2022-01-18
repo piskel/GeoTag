@@ -5,7 +5,7 @@ import MapView, { Marker } from "react-native-maps";
 import { RootStackParamList } from './RootStackParams';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { styles } from './styles';
-import { Box, Center, Heading, Modal, Stagger } from 'native-base';
+import { Box, Center, Heading, Modal, Stagger, Tag } from 'native-base';
 import { BarCodeReadEvent, RNCamera } from 'react-native-camera';
 import Geolocation from 'react-native-geolocation-service';
 import { TagStruct } from './typedef';
@@ -59,7 +59,6 @@ type GeoTagButtonProps =
 
 
 const GeoTagButton = ({ navigation, tag }: GeoTagButtonProps) => {
-  console.log(tag);
   return (
     <TouchableOpacity
       onPress={() => { navigation.navigate('TagDetailsView', { tag: tag }); }}
@@ -120,10 +119,7 @@ export default class ExplorationView
 {
   constructor(props: ExplorationViewProps | Readonly<ExplorationViewProps>) {
     super(props);
-    // this.setState({markerList:[]})
-
-
-
+    
     this.state = {
       tagList: [],
       showModal: false,
@@ -152,10 +148,14 @@ export default class ExplorationView
    * Is called when a QRCode is read.
    * @param event 
    */
-  codeBarRead(event: BarCodeReadEvent) {
+  async codeBarRead(event: BarCodeReadEvent) {
 
-    console.log(event["data"]);
     this.setShowModal(false);
+
+    let tm = TagManager.getInstance();
+    let coordinateList = JSON.parse(event["data"]);
+    let coordinates = {latitude: coordinateList[0], longitude: coordinateList[1]};
+    let results = await tm.verifyScannedTag(coordinates);
   }
 
   /**
@@ -178,7 +178,7 @@ export default class ExplorationView
 
     // Get the initial coordinates of the user
 
-    // TODO: Move this somewhere else...
+    // TODO: Create a periondic function that updates the user's location
     Geolocation.getCurrentPosition(
       (position) => {
         this.setState({
@@ -193,7 +193,7 @@ export default class ExplorationView
         console.log(error.code, error.message);
       },
       {
-        enableHighAccuracy: true, timeout: 15000, maximumAge: 10000
+        enableHighAccuracy: true, timeout: 15000/*, maximumAge: 10000*/
       }
     );
 
@@ -287,7 +287,7 @@ export default class ExplorationView
                 <RNCamera
                   ratio={'4:4'}
                   style={{ height: 280, width: "110%" }}
-                  onBarCodeRead={(e) => { this.codeBarRead(e); }}
+                  onBarCodeRead={async (e) => { await this.codeBarRead(e); }}
                   captureAudio={false}
                 >
                 </RNCamera>

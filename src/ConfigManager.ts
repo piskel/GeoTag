@@ -12,7 +12,7 @@ export const resetConfig = async () =>
     console.log("Resetting configuration");
     await AsyncStorage.clear();
     await AsyncStorage.setItem(FIRST_START_KEY, "false");
-    TagManager.clearTags();
+    await TagManager.clearTags();
 
 }
 
