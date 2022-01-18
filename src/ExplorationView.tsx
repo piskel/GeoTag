@@ -13,6 +13,11 @@ import { TagManager } from './TagManager';
 
 // TODO : Let users set their tag either public (displays them on the map)
 
+
+
+// TODO : Move components in a separate file
+
+
 ///////////////////////////////////////////////////////////////
 // Marker List ////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////
@@ -28,8 +33,8 @@ const MarkerList = ({ navigation, tagList }: MarkerListProps) => {
 
   const markers = tagList.map((tag) =>
     <Marker
-      key={`${tag.coordinate.latitude}, ${tag.coordinate.longitude}, ${tag.creationDate}`}
-      coordinate={{ latitude: tag.coordinate.latitude, longitude: tag.coordinate.longitude }}
+      key={`${tag.coordinates.latitude}, ${tag.coordinates.longitude}, ${tag.creationDate}`}
+      coordinate={{ latitude: tag.coordinates.latitude, longitude: tag.coordinates.longitude }}
       pinColor={tag.isFound ? "blue" : "red"}
       onPress={() => { navigation.navigate('TagDetailsView', { tag: tag }); }} />
   );
@@ -172,6 +177,8 @@ export default class ExplorationView
   async componentDidMount() {
 
     // Get the initial coordinates of the user
+
+    // TODO: Move this somewhere else...
     Geolocation.getCurrentPosition(
       (position) => {
         this.setState({
@@ -181,10 +188,8 @@ export default class ExplorationView
             longitude: position.coords.longitude,
           }
         });
-        // console.log(position);
       },
       (error) => {
-        // See error code charts below.
         console.log(error.code, error.message);
       },
       {

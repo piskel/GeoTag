@@ -82,13 +82,13 @@ export default class TagDetailsView extends React.Component<TagDetailsViewProps,
                         showsBuildings={true}
                         camera={{
                             altitude: 0,
-                            center: { latitude: tag.coordinate.latitude, longitude: tag.coordinate.longitude },
+                            center: { latitude: tag.coordinates.latitude, longitude: tag.coordinates.longitude },
                             heading: 0, // Camera rotation
                             pitch: 90, // Camera inclination
                             zoom: 15 // Camera zoom
                         }}
                     >
-                        <Marker coordinate={{ latitude: tag.coordinate.latitude, longitude: tag.coordinate.longitude }} pinColor={tag.isFound ? "gold" : "red"}/>
+                        <Marker coordinate={{ latitude: tag.coordinates.latitude, longitude: tag.coordinates.longitude }} pinColor={tag.isFound ? "gold" : "red"}/>
                     </MapView>
                 </View>
     
@@ -127,8 +127,8 @@ export default class TagDetailsView extends React.Component<TagDetailsViewProps,
                             
                             <VStack>
                                 <Heading size="sm">Coordinates</Heading>
-                                <Text>{tag.coordinate.latitude}</Text>
-                                <Text>{tag.coordinate.longitude}</Text>
+                                <Text>{tag.coordinates.latitude}</Text>
+                                <Text>{tag.coordinates.longitude}</Text>
                             </VStack>
                         </Flex>
     

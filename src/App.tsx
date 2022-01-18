@@ -35,7 +35,7 @@ const initApp = async () =>
   // await loadMockConfig(); // Debug only
 
   const tm = new TagManager("http://192.168.1.113:1234");
-  await tm.fetchTagsFromServer();
+  await tm.updateTagsFromServer();
   // console.log("Loaded online tags");
 }
 

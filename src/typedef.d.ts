@@ -1,12 +1,15 @@
 
+
+export interface CoordinateStruct
+{
+    latitude: number,
+    longitude: number
+}
+
 export interface TagStruct
 {
     location: string;
-    coordinate:
-    {
-        latitude: number,
-        longitude: number
-    },
+    coordinates: CoordinateStruct,
     creationDate: number,
     isFound?: boolean,
     findDate?: number
