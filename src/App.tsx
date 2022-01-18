@@ -11,7 +11,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import TagDetailsView from './TagDetailsView';
 import { NativeBaseProvider } from 'native-base';
 import { TagManager } from './TagManager';
-import { initConfig, loadMockConfig, setFirstStart } from './ConfigManager';
+import { initConfig, setFirstStart } from './ConfigManager';
 
 
 
@@ -35,7 +35,7 @@ const initApp = async () =>
   // await loadMockConfig(); // Debug only
 
   const tm = new TagManager("http://192.168.1.113:1234");
-  await tm.fetchOnlineTags();
+  await tm.fetchTagsFromServer();
   // console.log("Loaded online tags");
 }
 

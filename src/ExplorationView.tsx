@@ -5,13 +5,11 @@ import MapView, { Marker } from "react-native-maps";
 import { RootStackParamList } from './RootStackParams';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { styles } from './styles';
-import { Box, Center, Heading, HStack, Modal, Spacer, Stagger, VStack } from 'native-base';
+import { Box, Center, Heading, Modal, Stagger } from 'native-base';
 import { BarCodeReadEvent, RNCamera } from 'react-native-camera';
 import Geolocation from 'react-native-geolocation-service';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { TagStruct } from './typedef';
-import { FOUND_TAG_LIST_KEY, ONLINE_TAG_LIST_KEY } from './Constants';
-import { marginBottom } from 'styled-system';
+import { TagManager } from './TagManager';
 
 // TODO : Let users set their tag either public (displays them on the map)
 
@@ -68,7 +66,7 @@ const GeoTagButton = ({ navigation, tag }: GeoTagButtonProps) => {
         backgroundColor: "#fff",
         borderRadius: 5,
       }}>
-        <Heading size="xl" textAlign={"center"} >
+        <Heading size="xs" textAlign={"center"} >
         {tag.location}
         </Heading>
       </Box>
@@ -150,6 +148,8 @@ export default class ExplorationView
    * @param event 
    */
   codeBarRead(event: BarCodeReadEvent) {
+
+    console.log(event["data"]);
     this.setShowModal(false);
   }
 
@@ -157,19 +157,12 @@ export default class ExplorationView
    * Updates the list of markers that are displayed on the map.
    */
   async updateTags() {
-    // const currentTagList = this.state.tagList;
+    
+    let tagList = await TagManager.getTags();
 
-    // const foundTagList = await AsyncStorage.getItem(FOUND_TAG_LIST_KEY) as string;
-    const onlineTagList = await AsyncStorage.getItem(ONLINE_TAG_LIST_KEY) as string;
-
-    const onlineTagListJSON = JSON.parse(onlineTagList);
-
-
-    console.log("onlineTagListJSON", onlineTagListJSON);
-
-
+    
     this.setState({
-      tagList: onlineTagListJSON
+      tagList: tagList
     });
   }
 
@@ -199,18 +192,7 @@ export default class ExplorationView
       }
     );
 
-    // Get the list of tags from the storage and update the state
-    const foundTagList = await AsyncStorage.getItem(FOUND_TAG_LIST_KEY) as string;
-    const onlineTagList = await AsyncStorage.getItem(ONLINE_TAG_LIST_KEY) as string;
     
-    // Merge the two lists
-    // console.log(foundTagList);
-    // console.log(onlineTagList);
-    // const tagList = [...JSON.parse(foundTagList), ...JSON.parse(onlineTagList)];
-    // this.setState({ tagList:tagList });
-
-    
-
     this.updateTags();
 
   }

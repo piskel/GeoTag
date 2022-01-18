@@ -4,9 +4,8 @@ import { View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { RootStackParamList } from "./RootStackParams";
 import { styles } from "./styles";
-import { Center, Divider, Flex, Heading, List, SectionList, Text, VStack } from 'native-base'
+import { Center, Divider, Flex, Heading, ScrollView, Text, VStack } from 'native-base'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import Geocoder from "react-native-geocoding";
 import { TagStruct } from "./typedef";
 
 
@@ -18,10 +17,38 @@ type TagDetailsViewProps = NativeStackScreenProps<RootStackParamList, 'TagDetail
 
 
 
+const LocationField = ({ locationBreakdown }: { locationBreakdown: string[] }) => {
+    const fields = locationBreakdown.map((value, i) => <Text key={i}>{value}</Text>);
+    return (<>{fields}</>);
+};
 
-export interface TagDetailsViewState {
+const FoundDateField = ({ tag }: { tag: TagStruct }) => {
+    if (!tag.isFound) {
+        return (<></>);
+    }
+
+    return(
+    <Flex direction="row" alignItems={'center'}>
+    <Center margin={2}>
+    <Icon
+        name="calendar-check"
+        color="#000"
+        size={25}
+    ></Icon>
+    </Center>
+    <Divider thickness="2.5" bg="#000" mr="2" orientation="vertical"/>
+    
+    {/*TODO Fix*/}
+    <VStack>
+        <Heading size="sm">Found Date</Heading>
+        <Text>{(new Date(tag.findDate as number)).toUTCString()}</Text>
+    </VStack>
+    </Flex>);
 
 }
+
+
+export interface TagDetailsViewState {}
 
 export default class TagDetailsView extends React.Component<TagDetailsViewProps, TagDetailsViewState> {
 
@@ -39,6 +66,10 @@ export default class TagDetailsView extends React.Component<TagDetailsViewProps,
 
     render() {
         let tag = this.props.route.params.tag;
+        // Split the location at commas
+        let locationBreakdown = tag.location.split(", ");
+        console.log(locationBreakdown);
+
         return (
             <View style={styles.container}>
                 <View style={{ flex: 1 }}>
@@ -61,12 +92,29 @@ export default class TagDetailsView extends React.Component<TagDetailsViewProps,
                     </MapView>
                 </View>
     
-                <View style={{ flex: 1.5}}>
-                    <VStack margin={10} space={3}>
+                <ScrollView style={{ flex: 1.5}}>
+                    <VStack margin={5} space={3}>
                         <Heading size="xl" textAlign={"center"} mb={2}>
                             Tag Informations
                         </Heading>
-    
+                        
+
+                        <Flex direction="row" alignItems={'center'}>
+                            <Center margin={2}>
+                            <Icon
+                                name="map"
+                                color="#000"
+                                size={25}
+                            ></Icon>
+                            </Center>
+                            <Divider thickness="2.5" bg="#000" mr="2" orientation="vertical"/>
+                            
+                            <VStack>
+                                <Heading size="sm">Location</Heading>
+                                <LocationField locationBreakdown={locationBreakdown}/>
+                            </VStack>
+                        </Flex>
+
                         <Flex direction="row" alignItems={'center'}>
                             <Center margin={2}>
                             <Icon
@@ -100,23 +148,9 @@ export default class TagDetailsView extends React.Component<TagDetailsViewProps,
                             </VStack>
     
                         </Flex>
-    
-                        <Flex direction="row" alignItems={'center'}>
-                            <Center margin={2}>
-                            <Icon
-                                name="calendar-check"
-                                color="#000"
-                                size={25}
-                            ></Icon>
-                            </Center>
-                            <Divider thickness="2.5" bg="#000" mr="2" orientation="vertical"/>
-                            
-                            {/*TODO Fix*/}
-                            <VStack>
-                                <Heading size="sm">Found Date</Heading>
-                                <Text>{(new Date(tag.findDate as number)).toUTCString()}</Text>
-                            </VStack>
-                        </Flex>
+
+                        <FoundDateField tag={tag}/>
+
                         
                         <Flex direction="row" alignItems={'center'}>
                             <Center margin={2}>
@@ -136,7 +170,7 @@ export default class TagDetailsView extends React.Component<TagDetailsViewProps,
     
     
                     </VStack>
-                </View>
+                </ScrollView>
             </View>
         );
     }
