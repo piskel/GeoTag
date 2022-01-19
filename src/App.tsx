@@ -12,13 +12,14 @@ import TagDetailsView from './TagDetailsView';
 import { NativeBaseProvider } from 'native-base';
 import { TagManager } from './TagManager';
 import { initConfig, setFirstStart } from './ConfigManager';
+import { theme } from './styles';
 
 
 
 
 
 // Turns the top bar icons dark
-StatusBar.setBarStyle("dark-content");
+StatusBar.setBarStyle("light-content");
 
 // Makes the top bar translucent on Android devices
 if (Platform.OS === "android") {
@@ -49,7 +50,7 @@ const App = () => {
 
   return (
     <NavigationContainer>
-      <NativeBaseProvider>
+      <NativeBaseProvider theme={theme}>
         <Stack.Navigator>
 
           <Stack.Screen

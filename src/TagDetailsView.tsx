@@ -3,7 +3,7 @@ import React from "react";
 import { View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { RootStackParamList } from "./RootStackParams";
-import { styles } from "./styles";
+import { customMapStyle, styles } from "./styles";
 import { Center, Divider, Flex, Heading, ScrollView, Text, VStack } from 'native-base'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { TagStruct } from "./typedef";
@@ -72,7 +72,7 @@ export default class TagDetailsView extends React.Component<TagDetailsViewProps,
 
         return (
             <View style={styles.container}>
-                <View style={{ flex: 1 }}>
+                <View style={{ flex: 0.5 }}>
                     <MapView style={styles.map}
                         showsCompass={false}
                         rotateEnabled={false}
@@ -80,6 +80,9 @@ export default class TagDetailsView extends React.Component<TagDetailsViewProps,
                         showsMyLocationButton={false}
                         followsUserLocation={true}
                         showsBuildings={true}
+                        customMapStyle={customMapStyle}
+                        toolbarEnabled={false}
+
                         camera={{
                             altitude: 0,
                             center: { latitude: tag.coordinates.latitude, longitude: tag.coordinates.longitude },

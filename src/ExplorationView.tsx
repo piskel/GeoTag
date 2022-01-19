@@ -4,12 +4,13 @@ import { ScrollView, TouchableOpacity, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { RootStackParamList } from './RootStackParams';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { styles } from './styles';
+import { customMapStyle, styles } from './styles';
 import { Box, Center, Heading, Modal, Stagger, Tag } from 'native-base';
 import { BarCodeReadEvent, RNCamera } from 'react-native-camera';
 import Geolocation from 'react-native-geolocation-service';
 import { TagStruct } from './typedef';
 import { TagManager } from './TagManager';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
 
 // TODO : Let users set their tag either public (displays them on the map)
 
@@ -70,7 +71,7 @@ const GeoTagButton = ({ navigation, tag }: GeoTagButtonProps) => {
         backgroundColor: "#fff",
         borderRadius: 5,
       }}>
-        <Heading size="xs" textAlign={"center"} >
+        <Heading size="xs" textAlign={"center"}>
         {tag.location}
         </Heading>
       </Box>
@@ -215,6 +216,13 @@ export default class ExplorationView
             showsMyLocationButton={false}
             followsUserLocation={true}
             showsBuildings={true}
+            
+            toolbarEnabled={false}
+
+            customMapStyle={customMapStyle}
+
+            
+
 
             camera={{
               altitude: 0,
@@ -234,19 +242,20 @@ export default class ExplorationView
           <View style={styles.navView}>
 
             <Stagger visible={this.state.showStagger}>
-              <Icon name="bomb"color="#f0f"size={25}></Icon>
-              <Icon name="skull"color="#f00"size={25}></Icon>
-              <Icon name="radioactive"color="#00f"size={25}></Icon>
-              <Icon name="biohazard"color="#ff0"size={25}></Icon>
-              <Icon name="emoticon-happy"color="#0ff"size={25}></Icon>
+              <Icon name="bomb"color="#fff"size={25}></Icon>
+              <Icon name="skull"color="#fff"size={25}></Icon>
+              <Icon name="radioactive"color="#fff"size={25}></Icon>
+              <Icon name="biohazard"color="#fff"size={25}></Icon>
+              <Icon name="emoticon-happy"color="#fff"size={25}></Icon>
             </Stagger>
 
 
             <View style={{marginBottom:10}}>
               <Icon.Button
                 iconStyle={styles.scanButtonStyle}
-                style={styles.staggerButton}
+                style={styles.scanButton}
                 name="knife"
+                color="#000"
                 size={50}
                 onPress={(e) => this.setShowStagger(!this.state.showStagger)}>
               </Icon.Button>
@@ -259,6 +268,7 @@ export default class ExplorationView
                 iconStyle={styles.scanButtonStyle}
                 style={styles.scanButton}
                 name="qrcode"
+                color="#000"
                 size={50}
                 onPress={(e) => this.setShowModal(true)}>
               </Icon.Button>
