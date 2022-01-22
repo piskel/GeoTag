@@ -1,9 +1,9 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React from "react";
-import { View } from "react-native";
+import { StatusBar, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { RootStackParamList } from "./RootStackParams";
-import { customMapStyle, styles } from "./styles";
+import { customMapLightStyle, customMapStyle, styles } from "./styles";
 import { Center, Divider, Flex, Heading, ScrollView, Text, VStack } from 'native-base'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { TagStruct } from "./typedef";
@@ -27,28 +27,28 @@ const FoundDateField = ({ tag }: { tag: TagStruct }) => {
         return (<></>);
     }
 
-    return(
-    <Flex direction="row" alignItems={'center'}>
-    <Center margin={2}>
-    <Icon
-        name="calendar-check"
-        color="#000"
-        size={25}
-    ></Icon>
-    </Center>
-    <Divider thickness="2.5" bg="#000" mr="2" orientation="vertical"/>
-    
-    {/*TODO Fix*/}
-    <VStack>
-        <Heading size="sm">Found Date</Heading>
-        <Text>{(new Date(tag.findDate as number)).toUTCString()}</Text>
-    </VStack>
-    </Flex>);
+    return (
+        <Flex direction="row" alignItems={'center'} style={styles.detailsField}>
+            <Center margin={2}>
+                <Icon
+                    name="calendar-check"
+                    color="#000"
+                    size={25}
+                ></Icon>
+            </Center>
+            <Divider thickness="2.5" bg="#000" mr="2" orientation="vertical" />
+
+            {/*TODO Fix*/}
+            <VStack>
+                <Heading size="sm">Found Date</Heading>
+                <Text>{(new Date(tag.findDate as number)).toLocaleString()}</Text>
+            </VStack>
+        </Flex>);
 
 }
 
 
-export interface TagDetailsViewState {}
+export interface TagDetailsViewState { }
 
 export default class TagDetailsView extends React.Component<TagDetailsViewProps, TagDetailsViewState> {
 
@@ -70,9 +70,10 @@ export default class TagDetailsView extends React.Component<TagDetailsViewProps,
         let locationBreakdown = tag.location.split(", ");
         console.log(locationBreakdown);
 
+
         return (
             <View style={styles.container}>
-                <View style={{ flex: 0.5 }}>
+                <View style={{ flex: 0.5, overflow: 'hidden', borderRadius: 15 }}>
                     <MapView style={styles.map}
                         showsCompass={false}
                         rotateEnabled={false}
@@ -80,7 +81,7 @@ export default class TagDetailsView extends React.Component<TagDetailsViewProps,
                         showsMyLocationButton={false}
                         followsUserLocation={true}
                         showsBuildings={true}
-                        customMapStyle={customMapStyle}
+                        customMapStyle={customMapLightStyle}
                         toolbarEnabled={false}
 
                         camera={{
@@ -91,87 +92,87 @@ export default class TagDetailsView extends React.Component<TagDetailsViewProps,
                             zoom: 15 // Camera zoom
                         }}
                     >
-                        <Marker coordinate={{ latitude: tag.coordinates.latitude, longitude: tag.coordinates.longitude }} pinColor={tag.isFound ? "gold" : "red"}/>
+                        <Marker coordinate={{ latitude: tag.coordinates.latitude, longitude: tag.coordinates.longitude }} pinColor={tag.isFound ? "blue" : "red"} />
                     </MapView>
                 </View>
-    
+
                 <ScrollView style={{ flex: 1.5}}>
                     <VStack margin={5} space={3}>
-                        <Heading size="xl" textAlign={"center"} mb={2}>
+                        <Heading size="xl" fontWeight={800} textAlign={"center"} mb={2}>
                             Tag Informations
                         </Heading>
-                        
 
-                        <Flex direction="row" alignItems={'center'}>
+
+                        <Flex direction="row" alignItems={'center'} style={styles.detailsField}>
                             <Center margin={2}>
-                            <Icon
-                                name="map"
-                                color="#000"
-                                size={25}
-                            ></Icon>
+                                <Icon
+                                    name="map"
+                                    color="#000"
+                                    size={25}
+                                ></Icon>
                             </Center>
-                            <Divider thickness="2.5" bg="#000" mr="2" orientation="vertical"/>
-                            
+                            <Divider thickness="2.5" bg="#000" mr="2" orientation="vertical" />
+
                             <VStack>
                                 <Heading size="sm">Location</Heading>
-                                <LocationField locationBreakdown={locationBreakdown}/>
+                                <LocationField locationBreakdown={locationBreakdown} />
                             </VStack>
                         </Flex>
 
-                        <Flex direction="row" alignItems={'center'}>
+                        <Flex direction="row" alignItems={'center'} style={styles.detailsField}>
                             <Center margin={2}>
-                            <Icon
-                                name="globe-model"
-                                color="#000"
-                                size={25}
-                            ></Icon>
+                                <Icon
+                                    name="globe-model"
+                                    color="#000"
+                                    size={25}
+                                ></Icon>
                             </Center>
-                            <Divider thickness="2.5" bg="#000" mr="2" orientation="vertical"/>
-                            
+                            <Divider thickness="2.5" bg="#000" mr="2" orientation="vertical" />
+
                             <VStack>
                                 <Heading size="sm">Coordinates</Heading>
                                 <Text>{tag.coordinates.latitude}</Text>
                                 <Text>{tag.coordinates.longitude}</Text>
                             </VStack>
                         </Flex>
-    
-                        <Flex direction="row" alignItems={'center'}>
+
+
+
+                        <Flex direction="row" alignItems={'center'} style={styles.detailsField}>
                             <Center margin={2}>
-                            <Icon
-                                name="map-marker-check-outline"
-                                color="#000"
-                                size={25}
-                            ></Icon>
+                                <Icon
+                                    name="calendar-plus"
+                                    color="#000"
+                                    size={25}
+                                ></Icon>
                             </Center>
-                            <Divider thickness="2.5" bg="#000" mr="2" orientation="vertical"/>
-                            
+                            <Divider thickness="2.5" bg="#000" mr="2" orientation="vertical" />
+
+                            <VStack>
+                                <Heading size="sm">Creation Date</Heading>
+                                <Text>{(new Date(tag.creationDate)).toLocaleString()}</Text>
+                            </VStack>
+                        </Flex>
+                        
+                        <Flex direction="row" alignItems={'center'} style={styles.detailsField}>
+                            <Center margin={2}>
+                                <Icon
+                                    name="map-marker-check-outline"
+                                    color="#000"
+                                    size={25}
+                                ></Icon>
+                            </Center>
+                            <Divider thickness="2.5" bg="#000" mr="2" orientation="vertical" />
+
                             <VStack>
                                 <Heading size="sm">Has Been Found?</Heading>
                                 <Text>{tag.isFound ? "Yes" : "No"}</Text>
                             </VStack>
-    
+
                         </Flex>
 
-                        <FoundDateField tag={tag}/>
+                        <FoundDateField tag={tag} />
 
-                        
-                        <Flex direction="row" alignItems={'center'}>
-                            <Center margin={2}>
-                            <Icon
-                                name="calendar-plus"
-                                color="#000"
-                                size={25}
-                            ></Icon>
-                            </Center>
-                            <Divider thickness="2.5" bg="#000" mr="2" orientation="vertical"/>
-                            
-                            <VStack>
-                                <Heading size="sm">Creation Date</Heading>
-                                <Text>{(new Date(tag.creationDate)).toUTCString()}</Text>
-                            </VStack>
-                        </Flex>
-    
-    
                     </VStack>
                 </ScrollView>
             </View>

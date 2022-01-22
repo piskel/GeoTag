@@ -11,7 +11,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import TagDetailsView from './TagDetailsView';
 import { NativeBaseProvider } from 'native-base';
 import { TagManager } from './TagManager';
-import { initConfig, setFirstStart } from './ConfigManager';
+import { ConfigManager } from './ConfigManager';
 import { theme } from './styles';
 
 
@@ -19,7 +19,7 @@ import { theme } from './styles';
 
 
 // Turns the top bar icons dark
-StatusBar.setBarStyle("light-content");
+StatusBar.setBarStyle("dark-content");
 
 // Makes the top bar translucent on Android devices
 if (Platform.OS === "android") {
@@ -31,8 +31,8 @@ if (Platform.OS === "android") {
 
 const initApp = async () =>
 {
-  await setFirstStart(); // Debug only
-  await initConfig();
+  // await ConfigManager.setFirstStart(); // Debug only
+  await ConfigManager.initConfig();
   // await loadMockConfig(); // Debug only
 
   const tm = TagManager.getInstance();

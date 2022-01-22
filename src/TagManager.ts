@@ -1,7 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { SERVER_URL, TAG_LIST_KEY } from "./Constants";
-import { CoordinateStruct, TagStruct } from "./typedef";
+import { MAX_TAG_DISTANCE, SERVER_URL, TAG_LIST_KEY } from "./Constants";
+import { CoordinatesStruct, TagStruct } from "./typedef";
 import Geolocation from 'react-native-geolocation-service';
+import { ConfigManager } from "./ConfigManager";
 
 /**
  * Manages everything tag related.
@@ -46,6 +47,17 @@ export class TagManager {
         return tagList;
     }
 
+    public static async setTagToFound(coordinates: CoordinatesStruct): Promise<void> {
+        let tagId = await TagManager.findTag(coordinates);
+        let tagList = await TagManager.getTags();
+
+        if (tagId !== -1) {
+            tagList[tagId].isFound = true;
+            tagList[tagId].findDate = new Date().getTime();
+            await AsyncStorage.setItem(TAG_LIST_KEY, JSON.stringify(tagList));
+        }
+    }
+
 
     /**
      * Adds a tag to local storage and checks for duplicates
@@ -85,7 +97,7 @@ export class TagManager {
      * @param coordinates The coordinates of the tag.
      * @returns The id of the tag if found, -1 otherwise.
      */
-    public static async findTag(coordinates: CoordinateStruct): Promise<number> {
+    public static async findTag(coordinates: CoordinatesStruct): Promise<number> {
         let tagList = await TagManager.getTags();
         let tagId = -1;
 
@@ -144,7 +156,7 @@ export class TagManager {
      * @param latitude Latitude of the tag.
      * @param longitude Longitude of the tag.
      */
-    public async postNewTag(coordinates: CoordinateStruct): Promise<void> {
+    public async postNewTag(coordinates: CoordinatesStruct): Promise<void> {
         let xhttp = new XMLHttpRequest();
 
         xhttp.onreadystatechange = async () => {
@@ -166,7 +178,7 @@ export class TagManager {
      * @param c1 Coordinate 1.
      * @param c2 Coordinate 2.
      */
-    public static getDistance(c1: CoordinateStruct, c2: CoordinateStruct): number {
+    public static getDistance(c1: CoordinatesStruct, c2: CoordinatesStruct): number {
         // TODO : Add sources
 
         let R = 6371e3; // metres
@@ -188,37 +200,53 @@ export class TagManager {
      * @param longitude Longitude contained in the tag.
      * @returns If the tag is valid.
      */
-    public async verifyScannedTag(coordinates: CoordinateStruct): Promise<boolean> {
+    public async verifyScannedTag(data: any, successCallback: () => void, errorCallback: (message:string) => void): Promise<void> {
+        // Check that the data are coordinates following the CoordinatesStruct format
+        let coordinates = { latitude: 0, longitude: 0 };
+        try {
+            let coordinatesList = JSON.parse(data);
+            coordinates.latitude = coordinatesList[0];
+            coordinates.longitude = coordinatesList[1];
+            console.log("Parsed coordinates");
+        }
+        catch (e) {
+            console.log("Error parsing coordinates");
+            errorCallback("This doesn't seem to be a GeoTag...");
+            return;
+        }
+        
+        
         // We update the tags from the server
+        console.log("Verifying scanned tag");
         await this.updateTagsFromServer();
 
         // We first check if the tag exists locally
         let tagId = await TagManager.findTag(coordinates);
         if (tagId === -1) {
-            return false;
+            console.log("Tag not found locally");
+            errorCallback("The tag you scanned is not in the database.");
+            return;
         }
 
-        // We check the distance between the tag and the user's location
-        // let tagList = await TagManager.getTags();
-        // let tag = tagList[tagId];
-        // let userLocation = await LocationManager.getLocation();
-        Geolocation.getCurrentPosition(
-            (position) => {
-                // Make sure the tag is not too far away
-                let distance = TagManager.getDistance(coordinates, { latitude: position.coords.latitude, longitude: position.coords.longitude });
+        let currentLocation = await ConfigManager.getCurrentLocation()
+        
+        let distanceBetweenTags = TagManager.getDistance(currentLocation, coordinates);
+        // console.log(distanceBetweenTags);
+        console.log("Distance between tag and user: " + distanceBetweenTags);
 
-                console.log("Distance between tag and user: " + distance);
-            },
-            (error) => {
-                console.log(error.code, error.message);
-            },
-            {
-                enableHighAccuracy: true, timeout: 15000/*, maximumAge: 10000*/
-            }
-        );
-
-
-        return false;
+        // If the tag is within the range, we add it to the list of found tags
+        if (distanceBetweenTags <= MAX_TAG_DISTANCE) {
+            console.log("Tag found");
+            // Warning: We use the tag coordinates as the id and not the user's coordinates
+            // this is because the user's coordinates do not match the tag's coordinates in the database
+            await TagManager.setTagToFound(coordinates);
+            successCallback();
+        }
+        else
+        {
+            console.log("Tag not within range");
+            errorCallback("This tag is not where it should be.");
+        }
     }
 
 

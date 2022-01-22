@@ -1,6 +1,6 @@
 
 
-export interface CoordinateStruct
+export interface CoordinatesStruct
 {
     latitude: number,
     longitude: number
@@ -9,7 +9,7 @@ export interface CoordinateStruct
 export interface TagStruct
 {
     location: string;
-    coordinates: CoordinateStruct,
+    coordinates: CoordinatesStruct,
     creationDate: number,
     isFound?: boolean,
     findDate?: number
