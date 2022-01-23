@@ -1,16 +1,16 @@
 import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
-import { ScrollView, TouchableOpacity, View } from "react-native";
+import { ScrollView, ToastAndroid, TouchableOpacity, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { RootStackParamList } from './RootStackParams';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { customMapLightStyle, styles, themeColors } from './styles';
-import { Box, Center, Heading, Modal } from 'native-base';
-import { BarCodeReadEvent, RNCamera } from 'react-native-camera';
-import { TagStruct } from './typedef';
+import { Box, Heading } from 'native-base';
+import { BarCodeReadEvent } from 'react-native-camera';
+import { CoordinatesStruct, TagStruct } from './typedef';
 import { TagManager } from './TagManager';
 import { ConfigManager } from './ConfigManager';
-import { ErrorModal } from './Components';
+import { AddTagModal, CameraModal, ErrorModal } from './Components';
 
 
 
@@ -20,37 +20,8 @@ import { ErrorModal } from './Components';
 
 
 ///////////////////////////////////////////////////////////////
-// Marker List ////////////////////////////////////////////////
+// GeoTag Button //////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////
-
-// type MarkerListProps =
-//   {
-//     navigation: NativeStackNavigationProp<RootStackParamList, "ExplorationView">,
-//     tagList: TagStruct[]
-//   }
-
-
-// const MarkerList = ({ navigation, tagList }: MarkerListProps) => {
-
-//   const markers = tagList.map((tag, i) =>
-//     <Marker
-//       key={i}
-//       coordinate={{ latitude: tag.coordinates.latitude, longitude: tag.coordinates.longitude }}
-//       pinColor={tag.isFound ? "blue" : "red"}
-//       onPress={() => { navigation.navigate('TagDetailsView', { tag: tag }); }} />
-//   );
-//   return (<>{markers}</>);
-// };
-
-
-
-
-
-///////////////////////////////////////////////////////////////
-// Button List ////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////
-
-
 
 
 type GeoTagButtonProps =
@@ -83,7 +54,9 @@ const GeoTagButton = ({ navigation, tag }: GeoTagButtonProps) => {
   );
 }
 
-
+///////////////////////////////////////////////////////////////
+// Button List ////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////
 
 type ButtonListProps =
   {
@@ -92,10 +65,6 @@ type ButtonListProps =
   }
 
 const ButtonList = ({ navigation, tagList }: ButtonListProps) => {
-
-  // const buttons = tagList.map((tag, i) =>
-  //   <GeoTagButton navigation={navigation} tag={tag} key={i} />
-  // );
 
   let noFoundTags = true;
   // Add buttons only if they are found and check if there are any tags
@@ -121,6 +90,9 @@ const ButtonList = ({ navigation, tagList }: ButtonListProps) => {
 };
 
 
+
+
+
 ///////////////////////////////////////////////////////////////
 // Exploration View ///////////////////////////////////////////
 ///////////////////////////////////////////////////////////////
@@ -131,13 +103,12 @@ export interface ExplorationViewState {
   tagList: TagStruct[],
   markers: JSX.Element[],
   errorMessage: string,
-  showModal: boolean,
+  showCameraModal: boolean,
   showErrorModal: boolean,
+  showAddTagModal: boolean,
   showStagger: boolean,
-  initialCoordinates: {
-    latitude: number,
-    longitude: number
-  }
+  initialCoordinates: CoordinatesStruct,
+  currentCoordinates: CoordinatesStruct
 };
 
 
@@ -150,34 +121,46 @@ export default class ExplorationView
     this.state = {
       tagList: [],
       markers: [],
-      errorMessage: "But we don't what...",
-      showModal: false,
+      errorMessage: "But we don't know what...",
+      showCameraModal: false,
       showErrorModal: false,
+      showAddTagModal: false,
       showStagger: false,
       initialCoordinates: {
+        latitude: 0,
+        longitude: 0
+      },
+      currentCoordinates: {
         latitude: 0,
         longitude: 0
       }
     }
 
+    this.updateInformations = this.updateInformations.bind(this);
     this.updateMarkers = this.updateMarkers.bind(this);
     this.updateCurrentLocation = this.updateCurrentLocation.bind(this);
     this.updateTags = this.updateTags.bind(this);
-    this.setShowModal = this.setShowModal.bind(this);
+    this.setShowCameraModal = this.setShowCameraModal.bind(this);
     this.setShowErrorModal = this.setShowErrorModal.bind(this);
+    this.setShowAddTagModal = this.setShowAddTagModal.bind(this);
     this.codeBarRead = this.codeBarRead.bind(this);
+    this.createNewTag = this.createNewTag.bind(this);
 
   }
 
 
 
 
-  setShowModal(showModal: boolean) {
-    this.setState({ showModal: showModal });
+  setShowCameraModal(showCameraModal: boolean) {
+    this.setState({ showCameraModal: showCameraModal });
   }
 
   setShowErrorModal(showErrorModal: boolean) {
     this.setState({ showErrorModal: showErrorModal });
+  }
+
+  setShowAddTagModal(showAddTagModal: boolean) {
+    this.setState({ showAddTagModal: showAddTagModal });
   }
 
   setShowStagger(showStagger: boolean) {
@@ -193,31 +176,58 @@ export default class ExplorationView
    */
   async codeBarRead(event: BarCodeReadEvent) {
     console.log("Scanning QR Code");
-    this.setShowModal(false);
+    this.setShowCameraModal(false);
     this.updateTags();
 
-    // let qrCodeData = JSON.parse(event["data"]);
-
-
-    // let coordinates = { latitude: coordinateList[0], longitude: coordinateList[1] };
-
     let tm = TagManager.getInstance();
+
     await tm.verifyScannedTag(event["data"],
       async () => {
-        await this.updateTags();
-        await this.updateMarkers();
-        console.log("OK")
+        await this.updateInformations();
       },
       (message) => {
         this.setState({ errorMessage: message });
         this.setShowErrorModal(true);
       });
 
-    // If the tag is found, display a toast message and update the map
-    // console.log(results);
+    // If the tag is found, display a toast message
+    if (this.state.tagList.filter((tag) => tag.isFound).length > 0) {
+      ToastAndroid.showWithGravity(
+        "Tag found!",
+        ToastAndroid.SHORT,
+        ToastAndroid.CENTER
+      );
+    }
 
+
+
+    // console.log(results);
+  }
+
+  async createNewTag() {
+    this.setShowAddTagModal(false);
+    let tm = TagManager.getInstance();
+    let currentLocation = await ConfigManager.getCurrentLocation();
+
+    await tm.postNewTag(currentLocation,
+      async () => {
+        await this.updateInformations();
+      },
+      (message) => {
+        this.setState({ errorMessage: message });
+        this.setShowErrorModal(true);
+      });
 
   }
+
+
+  async updateInformations() {
+    this.updateCurrentLocation();
+    this.updateTags();
+    this.updateMarkers();
+    this.forceUpdate();
+  }
+
 
   /**
    * Updates the list of markers that are displayed on the map.
@@ -230,8 +240,6 @@ export default class ExplorationView
       tagList: tagList
     });
 
-    await this.updateMarkers();
-    this.forceUpdate();
   }
 
   async updateMarkers() {
@@ -246,7 +254,7 @@ export default class ExplorationView
     );
 
 
-    this.setState({ markers: [] }); // Neceessary for the markers to update
+    this.setState({ markers: [] }); // Necessary for the markers to update
     this.setState({
       markers: markerList
     });
@@ -254,9 +262,10 @@ export default class ExplorationView
 
 
   async updateCurrentLocation() {
+
     let currentLocation = await ConfigManager.getCurrentLocation();
     this.setState({
-      initialCoordinates: {
+      currentCoordinates: {
         latitude: currentLocation.latitude,
         longitude: currentLocation.longitude
       }
@@ -269,28 +278,57 @@ export default class ExplorationView
    */
   async componentDidMount() {
     // Get the initial coordinates of the user
-    this.updateCurrentLocation();
+    // this.updateCurrentLocation();
 
-    // TODO: Create a periondic function that updates the user's location
+    let currentLocation = await ConfigManager.getCurrentLocation();
+    this.setState({
+      initialCoordinates: {
+        latitude: currentLocation.latitude,
+        longitude: currentLocation.longitude
+      }
+    })
+    
+
+    const tm = TagManager.getInstance();
+    await tm.updateTagsFromServer(
+      async () => { },
+      (message) => {
+        this.setState({ errorMessage: message });
+        this.setShowErrorModal(true);
+      });
 
 
-    this.updateTags();
+    await this.updateInformations();
+
+
+    setInterval(async () => {
+      console.log("Auto update");
+
+      await tm.updateTagsFromServer(
+        async () => {},
+        (message) => {});
+
+      await this.updateInformations();
+
+    }, 10000);
 
   }
 
-  componentDidUpdate() {
-  }
+
+  componentDidUpdate() {}
 
 
 
 
   render() {
 
+    // let currentLocation = await ConfigManager.getCurrentLocation();
+
     return (
       <View style={{
         flex: 1,
         // backgroundColor: '#f0f0f0'}}>
-        backgroundColor: '#000'
+        backgroundColor: themeColors.dark
       }}>
 
         <View style={{
@@ -302,10 +340,11 @@ export default class ExplorationView
 
           <MapView style={styles.map}
             showsCompass={false}
+            // children={this.state.markers}
             // rotateEnabled={false}
             showsUserLocation={true}
             showsMyLocationButton={false}
-            followsUserLocation={true}
+            // followsUserLocation={true}
             showsBuildings={true}
 
             toolbarEnabled={false}
@@ -317,6 +356,8 @@ export default class ExplorationView
             userLocationPriority={'high'}
             userLocationUpdateInterval={5000}
             userLocationFastestInterval={5000}
+
+            // onUserLocationChange={(location) => { console.log("OK") }}
 
 
 
@@ -332,12 +373,10 @@ export default class ExplorationView
               zoom: 13 // Camera zoom
             }}
           >
-            {/* <MarkerList navigation={this.props.navigation} tagList={this.state.tagList} /> */}
             {this.state.markers}
-
           </MapView>
 
-          <Heading size={"xl"} paddingLeft={1.5} borderRadius={5} fontWeight={900} style={{ position: "absolute", top: 50, left: 20 }} color={themeColors.dark}>
+          <Heading size={"xl"} paddingLeft={1.5} borderRadius={5} fontWeight={900} style={{ position: "absolute", top: 45, left: 20 }} color={themeColors.dark}>
             GEOTAG
             <Icon name="map-marker" color={themeColors.dark} size={28}></Icon>
           </Heading>
@@ -371,9 +410,9 @@ export default class ExplorationView
               iconStyle={styles.scanButtonStyle}
               style={styles.scanButton}
               name="map-marker-plus"
-              color="#fff"
+              color={themeColors.white}
               size={35}
-              onPress={(e) => this.setShowStagger(!this.state.showStagger)}>
+              onPress={(e) => this.setShowAddTagModal(true)}>
             </Icon.Button>
           </View>
 
@@ -384,9 +423,9 @@ export default class ExplorationView
               iconStyle={styles.scanButtonStyle}
               style={styles.scanButton}
               name="qrcode"
-              color="#fff"
+              color={themeColors.white}
               size={50}
-              onPress={(e) => this.setShowModal(true)}>
+              onPress={(e) => this.setShowCameraModal(true)}>
             </Icon.Button>
           </View>
 
@@ -395,41 +434,15 @@ export default class ExplorationView
 
 
         <ScrollView style={styles.buttonListView}>
-
-          <Heading size="xl" fontWeight={800} textAlign={"center"} mb={2} color={'white'}>
+          <Heading size="xl" fontWeight={800} textAlign={"center"} mb={2} color={themeColors.white}>
             Tags found
           </Heading>
           <ButtonList navigation={this.props.navigation} tagList={this.state.tagList} />
         </ScrollView>
 
-
-
-
-
-        <Center>
-          <Modal style={{}} isOpen={this.state.showModal} onClose={() => this.setShowModal(false)} size="lg">
-            <Modal.Content style={{}}>
-              <Modal.CloseButton />
-
-              <Modal.Header>
-                <Heading fontWeight={800} textAlign={"center"}>
-                  Scan a tag
-                </Heading>
-              </Modal.Header>
-              <Modal.Body style={{ alignItems: "center" }}>
-                <RNCamera
-                  ratio={'4:4'}
-                  style={{ height: 280, width: "110%" }}
-                  onBarCodeRead={async (e) => { await this.codeBarRead(e); }}
-                  captureAudio={false}
-                >
-                </RNCamera>
-              </Modal.Body>
-            </Modal.Content>
-          </Modal>
-        </Center>
-
+        <CameraModal visible={this.state.showCameraModal} onClose={() => this.setShowCameraModal(false)} onBarCodeRead={async (e) => await this.codeBarRead(e)} />
         <ErrorModal visible={this.state.showErrorModal} message={this.state.errorMessage} onClose={() => this.setShowErrorModal(false)} />
+        <AddTagModal visible={this.state.showAddTagModal} onClose={() => this.setShowAddTagModal(false)} onAddTag={async () => await this.createNewTag()} />
 
       </View>);
   }

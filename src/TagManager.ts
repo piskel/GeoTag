@@ -1,7 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MAX_TAG_DISTANCE, SERVER_URL, TAG_LIST_KEY } from "./Constants";
 import { CoordinatesStruct, TagStruct } from "./typedef";
-import Geolocation from 'react-native-geolocation-service';
 import { ConfigManager } from "./ConfigManager";
 
 /**
@@ -13,9 +12,17 @@ export class TagManager {
 
     private server_url: string;
 
+
+    // XMLHttpRequests
+    // private updateTagsFromServerRequest : XMLHttpRequest;
+    // private postNewTagRequest : XMLHttpRequest;
+
     private constructor() {
         // TODO: Move this, might be useless
         this.server_url = SERVER_URL;
+
+        // this.updateTagsFromServerRequest = new XMLHttpRequest();
+        // this.postNewTagRequest = new XMLHttpRequest();
     }
 
     /**
@@ -112,15 +119,30 @@ export class TagManager {
     }
 
 
+    public async initRequestListeners() {
+        
+    }
+
+
     /**
      * Fetches tags from the server and adds them to local storage.
      */
-    public async updateTagsFromServer(): Promise<void> {
-
+    public async updateTagsFromServer(successCallback: () => void, errorCallback: (message:string) => void): Promise<void> {
 
         let xhttp = new XMLHttpRequest();
 
         xhttp.onreadystatechange = async () => {
+            
+
+            if (xhttp.readyState != 4 || xhttp.status != 200) {
+                //@ts-ignore
+                if(xhttp._hasError) {
+                    console.log("Error: ", xhttp.responseText);
+                    errorCallback("There seems to be an error with the server. Please try again later.");
+                }
+                return;
+            }
+
             console.log("Fetched online tags");
             let jsonOnlineTags = xhttp.responseText;
 
@@ -136,10 +158,12 @@ export class TagManager {
                     let onlineTag = onlineTagsList[i];
                     await TagManager.addTag(onlineTag, true);
                 }
+                successCallback();
             }
             catch (e) {
-                // console.log("Error parsing JSON");
-                // console.log(e);
+                console.log("Error parsing JSON");
+                console.log(e);
+                errorCallback("There seems to be an error with the server. Please try again later.");
             }
 
         }
@@ -156,14 +180,28 @@ export class TagManager {
      * @param latitude Latitude of the tag.
      * @param longitude Longitude of the tag.
      */
-    public async postNewTag(coordinates: CoordinatesStruct): Promise<void> {
+    public async postNewTag(coordinates: CoordinatesStruct, successCallback: () => void, errorCallback: (message:string) => void): Promise<void> {
+        
+        // TODO: Should be done only after confirmation that the user placed the tag at the correct location
+        
         let xhttp = new XMLHttpRequest();
 
         xhttp.onreadystatechange = async () => {
+
+            if (xhttp.readyState != 4 || xhttp.status != 200) {
+                //@ts-ignore
+                if(xhttp._hasError) {
+                    
+                console.log("Error: ", xhttp.responseText);
+                errorCallback("There seems to be an error with the server. Please try again later.");
+                }
+                return;
+            }
+
             console.log("Posted new tag");
             // Read the response
             let response = xhttp.responseText;
-            console.log(response);
+            successCallback();
         }
 
         console.log("Posting new tag to " + this.server_url + "/api/geotag");
@@ -216,14 +254,12 @@ export class TagManager {
         }
         
         
-        // We update the tags from the server
-        console.log("Verifying scanned tag");
-        await this.updateTagsFromServer();
+        // We fetch the tags from the server
+        await this.updateTagsFromServer(()=>{},errorCallback);
 
         // We first check if the tag exists locally
         let tagId = await TagManager.findTag(coordinates);
         if (tagId === -1) {
-            console.log("Tag not found locally");
             errorCallback("The tag you scanned is not in the database.");
             return;
         }
@@ -244,8 +280,7 @@ export class TagManager {
         }
         else
         {
-            console.log("Tag not within range");
-            errorCallback("This tag is not where it should be.");
+            errorCallback("This tag is not where it should be. A tag should be within " + MAX_TAG_DISTANCE + " it's from it's set location.");
         }
     }
 

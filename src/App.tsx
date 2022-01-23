@@ -10,7 +10,6 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import TagDetailsView from './TagDetailsView';
 import { NativeBaseProvider } from 'native-base';
-import { TagManager } from './TagManager';
 import { ConfigManager } from './ConfigManager';
 import { theme } from './styles';
 
@@ -35,8 +34,8 @@ const initApp = async () =>
   await ConfigManager.initConfig();
   // await loadMockConfig(); // Debug only
 
-  const tm = TagManager.getInstance();
-  await tm.updateTagsFromServer();
+  // const tm = TagManager.getInstance();
+  // await tm.updateTagsFromServer();
 }
  
 
