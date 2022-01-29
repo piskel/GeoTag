@@ -1,7 +1,7 @@
 import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
 import { ScrollView, ToastAndroid, TouchableOpacity, View } from "react-native";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, { MapEvent, Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { RootStackParamList } from './RootStackParams';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { customMapLightStyle, styles, themeColors } from './styles';
@@ -108,7 +108,8 @@ export interface ExplorationViewState {
   showAddTagModal: boolean,
   showStagger: boolean,
   initialCoordinates: CoordinatesStruct,
-  currentCoordinates: CoordinatesStruct
+  currentCoordinates: CoordinatesStruct,
+  newTagCoordinates: CoordinatesStruct,
 };
 
 
@@ -131,6 +132,10 @@ export default class ExplorationView
         longitude: 0
       },
       currentCoordinates: {
+        latitude: 0,
+        longitude: 0
+      },
+      newTagCoordinates: {
         latitude: 0,
         longitude: 0
       }
@@ -205,11 +210,14 @@ export default class ExplorationView
   }
 
   async createNewTag() {
+
+
     this.setShowAddTagModal(false);
     let tm = TagManager.getInstance();
-    let currentLocation = await ConfigManager.getCurrentLocation();
+    // let currentLocation = await ConfigManager.getCurrentLocation();
 
-    await tm.postNewTag(currentLocation,
+
+    await tm.postNewTag(this.state.newTagCoordinates,
       async () => {
         await this.updateInformations();
       },
@@ -287,11 +295,10 @@ export default class ExplorationView
         longitude: currentLocation.longitude
       }
     })
-    
+
 
     const tm = TagManager.getInstance();
     await tm.updateTagsFromServer(
-      async () => { },
       (message) => {
         this.setState({ errorMessage: message });
         this.setShowErrorModal(true);
@@ -304,10 +311,7 @@ export default class ExplorationView
     setInterval(async () => {
       console.log("Auto update");
 
-      await tm.updateTagsFromServer(
-        async () => {},
-        (message) => {});
-
+      await tm.updateTagsFromServer((message) => { });
       await this.updateInformations();
 
     }, 10000);
@@ -315,7 +319,7 @@ export default class ExplorationView
   }
 
 
-  componentDidUpdate() {}
+  componentDidUpdate() { }
 
 
 
@@ -340,8 +344,6 @@ export default class ExplorationView
 
           <MapView style={styles.map}
             showsCompass={false}
-            // children={this.state.markers}
-            // rotateEnabled={false}
             showsUserLocation={true}
             showsMyLocationButton={false}
             // followsUserLocation={true}
@@ -356,6 +358,14 @@ export default class ExplorationView
             userLocationPriority={'high'}
             userLocationUpdateInterval={5000}
             userLocationFastestInterval={5000}
+
+
+            onLongPress={async(e) => {
+              let coordinates = e.nativeEvent.coordinate;
+              this.setState({newTagCoordinates: coordinates});
+              this.setShowAddTagModal(true);
+              }
+            }
 
             // onUserLocationChange={(location) => { console.log("OK") }}
 
@@ -384,26 +394,6 @@ export default class ExplorationView
         </View>
 
         <View style={styles.navView}>
-
-          {/* <Stagger visible={this.state.showStagger}>
-            <Icon name="bomb" color="#fff" size={25}></Icon>
-            <Icon name="skull" color="#fff" size={25}></Icon>
-            <Icon name="radioactive" color="#fff" size={25}></Icon>
-            <Icon name="biohazard" color="#fff" size={25}></Icon>
-            <Icon name="emoticon-happy" color="#fff" size={25}></Icon>
-          </Stagger>
-
-
-          <View style={{ marginBottom: 10 }}>
-            <Icon.Button
-              iconStyle={styles.scanButtonStyle}
-              style={styles.scanButton}
-              name="knife"
-              color="#fff"
-              size={50}
-              onPress={(e) => this.setShowStagger(!this.state.showStagger)}>
-            </Icon.Button>
-          </View> */}
 
           <View style={{ marginBottom: 25 }}>
             <Icon.Button
@@ -442,7 +432,7 @@ export default class ExplorationView
 
         <CameraModal visible={this.state.showCameraModal} onClose={() => this.setShowCameraModal(false)} onBarCodeRead={async (e) => await this.codeBarRead(e)} />
         <ErrorModal visible={this.state.showErrorModal} message={this.state.errorMessage} onClose={() => this.setShowErrorModal(false)} />
-        <AddTagModal visible={this.state.showAddTagModal} onClose={() => this.setShowAddTagModal(false)} onAddTag={async () => await this.createNewTag()} />
+        <AddTagModal coordinates={this.state.newTagCoordinates} visible={this.state.showAddTagModal} onClose={() => this.setShowAddTagModal(false)} onAddTag={async () => await this.createNewTag()} />
 
       </View>);
   }

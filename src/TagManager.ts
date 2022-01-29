@@ -3,6 +3,13 @@ import { MAX_TAG_DISTANCE, SERVER_URL, TAG_LIST_KEY } from "./Constants";
 import { CoordinatesStruct, TagStruct } from "./typedef";
 import { ConfigManager } from "./ConfigManager";
 
+
+enum RequestType {
+    GET = "GET",
+    POST = "POST"
+}
+
+
 /**
  * Manages everything tag related.
  */
@@ -12,17 +19,9 @@ export class TagManager {
 
     private server_url: string;
 
-
-    // XMLHttpRequests
-    // private updateTagsFromServerRequest : XMLHttpRequest;
-    // private postNewTagRequest : XMLHttpRequest;
-
     private constructor() {
         // TODO: Move this, might be useless
         this.server_url = SERVER_URL;
-
-        // this.updateTagsFromServerRequest = new XMLHttpRequest();
-        // this.postNewTagRequest = new XMLHttpRequest();
     }
 
     /**
@@ -120,36 +119,82 @@ export class TagManager {
 
 
     public async initRequestListeners() {
-        
+
     }
 
 
+
     /**
-     * Fetches tags from the server and adds them to local storage.
+     * Sends a request to the API server.
+     * @param requestType The type of request to send.
+     * @param path The path to the API endpoint.
+     * @param data The data to send if the request is a POST request.
+     * @param successCallback The callback to call if the request was successful.
+     * @param errorCallback The callback to call if the request failed.
      */
-    public async updateTagsFromServer(successCallback: () => void, errorCallback: (message:string) => void): Promise<void> {
-
+    public async makeRequestToServer(
+        requestType: RequestType,
+        path: string,
+        data: any = null,
+        successCallback: (response: any) => void,
+        errorCallback: (error_message: string) => void
+    ): Promise<void> {
         let xhttp = new XMLHttpRequest();
-
+        
         xhttp.onreadystatechange = async () => {
-            
 
+            // Catching errors from the server
             if (xhttp.readyState != 4 || xhttp.status != 200) {
                 //@ts-ignore
-                if(xhttp._hasError) {
-                    console.log("Error: ", xhttp.responseText);
+                if (xhttp._hasError) {
                     errorCallback("There seems to be an error with the server. Please try again later.");
                 }
                 return;
             }
 
-            console.log("Fetched online tags");
-            let jsonOnlineTags = xhttp.responseText;
+            // If the request was successful
+            try
+            {
+                // TODO: Define the response format of the server and handle it accordingly
+                let response = JSON.parse(xhttp.responseText);
+                successCallback(response);
+            }
+            catch (e)
+            {
+                errorCallback("There seems to be an error with the server. Please try again later.");
+            }
+        }
 
-            try {
-                // TODO: Check for errors in the response
+        try {
+            
+            xhttp.open(requestType, this.server_url + path, true);
+            console.log("Sending " + requestType + " request to " + this.server_url + path);
 
-                let onlineTagsList = JSON.parse(jsonOnlineTags) as TagStruct[];
+            if (requestType === RequestType.POST) {
+                xhttp.setRequestHeader("Content-Type", "application/json");
+                xhttp.send(JSON.stringify(data));
+            }
+            else {
+                xhttp.send();
+            }
+        }
+        catch (error) {
+            // If fails, JSON is probably invalid
+            errorCallback("There has been an error while trying to reach the server.");
+        }
+    }
+
+
+    /**
+     * Update the tags on the local storage by fetching them from the server.
+     * @param successCallback Callback function that is called when the tags are updated.
+     * @param errorCallback Callback function that is called when an error occurs.
+     */
+    public async updateTagsFromServer(errorCallback: (message: string) => void): Promise<void> {
+
+
+        let successCallbackWrapper = async (response: any) => {
+                let onlineTagsList = response as TagStruct[];
                 console.log("Parse successful");
 
                 // TODO: Remove tags that are not present in the online list
@@ -158,21 +203,17 @@ export class TagManager {
                     let onlineTag = onlineTagsList[i];
                     await TagManager.addTag(onlineTag, true);
                 }
-                successCallback();
-            }
-            catch (e) {
-                console.log("Error parsing JSON");
-                console.log(e);
-                errorCallback("There seems to be an error with the server. Please try again later.");
-            }
-
         }
 
+            
 
-
-        console.log("Fetching online tags from " + this.server_url + "/api/geotag");
-        xhttp.open("GET", this.server_url + "/api/geotag", true);
-        xhttp.send();
+        this.makeRequestToServer(
+            RequestType.GET,
+            "/api/geotag",
+            null,
+            successCallbackWrapper,
+            errorCallback
+        );
     }
 
     /**
@@ -180,35 +221,20 @@ export class TagManager {
      * @param latitude Latitude of the tag.
      * @param longitude Longitude of the tag.
      */
-    public async postNewTag(coordinates: CoordinatesStruct, successCallback: () => void, errorCallback: (message:string) => void): Promise<void> {
-        
+    public async postNewTag(coordinates: CoordinatesStruct, successCallback: () => void, errorCallback: (message: string) => void): Promise<void> {
+
         // TODO: Should be done only after confirmation that the user placed the tag at the correct location
-        
-        let xhttp = new XMLHttpRequest();
 
-        xhttp.onreadystatechange = async () => {
-
-            if (xhttp.readyState != 4 || xhttp.status != 200) {
-                //@ts-ignore
-                if(xhttp._hasError) {
-                    
-                console.log("Error: ", xhttp.responseText);
-                errorCallback("There seems to be an error with the server. Please try again later.");
-                }
-                return;
-            }
-
-            console.log("Posted new tag");
-            // Read the response
-            let response = xhttp.responseText;
-            successCallback();
-        }
-
-        console.log("Posting new tag to " + this.server_url + "/api/geotag");
-        // Connection is closed after the response is received
-        xhttp.open("POST", this.server_url + "/api/geotag", true);
-        xhttp.setRequestHeader("Content-Type", "application/json");
-        xhttp.send(JSON.stringify({ latitude: coordinates.latitude, longitude: coordinates.longitude }));
+        this.makeRequestToServer(
+            RequestType.POST,
+            "/api/geotag",
+            {
+                "latitude": coordinates.latitude,
+                "longitude": coordinates.longitude
+            },
+            successCallback,
+            errorCallback
+        );
     }
 
     /**
@@ -216,15 +242,18 @@ export class TagManager {
      * @param c1 Coordinate 1.
      * @param c2 Coordinate 2.
      */
-    public static getDistance(c1: CoordinatesStruct, c2: CoordinatesStruct): number {
-        // TODO : Add sources
+    public static getDistance(
+        c1: CoordinatesStruct,
+        c2: CoordinatesStruct): number {
+        // https://www.movable-type.co.uk/scripts/latlong.html
 
-        let R = 6371e3; // metres
-        let φ1 = c1.latitude * Math.PI / 180;
-        let φ2 = c2.latitude * Math.PI / 180;
-        let Δφ = (c2.latitude - c1.latitude) * Math.PI / 180;
-        let Δλ = (c2.longitude - c1.longitude) * Math.PI / 180;
+        let R = 6371e3; // Constant for the earth's radius
+        let φ1 = c1.latitude * Math.PI / 180; // Convert to radians
+        let φ2 = c2.latitude * Math.PI / 180; // Convert to radians
+        let Δφ = (c2.latitude - c1.latitude) * Math.PI / 180; // Difference in latitude
+        let Δλ = (c2.longitude - c1.longitude) * Math.PI / 180; // Difference in longitude
 
+        // Calculate the great circle distance using the Haversine formula
         let a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
         let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
@@ -238,7 +267,7 @@ export class TagManager {
      * @param longitude Longitude contained in the tag.
      * @returns If the tag is valid.
      */
-    public async verifyScannedTag(data: any, successCallback: () => void, errorCallback: (message:string) => void): Promise<void> {
+    public async verifyScannedTag(data: any, successCallback: () => void, errorCallback: (message: string) => void): Promise<void> {
         // Check that the data are coordinates following the CoordinatesStruct format
         let coordinates = { latitude: 0, longitude: 0 };
         try {
@@ -252,10 +281,10 @@ export class TagManager {
             errorCallback("This doesn't seem to be a GeoTag...");
             return;
         }
-        
-        
+
+
         // We fetch the tags from the server
-        await this.updateTagsFromServer(()=>{},errorCallback);
+        await this.updateTagsFromServer(errorCallback);
 
         // We first check if the tag exists locally
         let tagId = await TagManager.findTag(coordinates);
@@ -265,7 +294,7 @@ export class TagManager {
         }
 
         let currentLocation = await ConfigManager.getCurrentLocation()
-        
+
         let distanceBetweenTags = TagManager.getDistance(currentLocation, coordinates);
         // console.log(distanceBetweenTags);
         console.log("Distance between tag and user: " + distanceBetweenTags);
@@ -278,8 +307,7 @@ export class TagManager {
             await TagManager.setTagToFound(coordinates);
             successCallback();
         }
-        else
-        {
+        else {
             errorCallback("This tag is not where it should be. A tag should be within " + MAX_TAG_DISTANCE + " it's from it's set location.");
         }
     }

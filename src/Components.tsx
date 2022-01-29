@@ -2,6 +2,9 @@ import React from 'react';
 import { Button, Center, Heading, Modal, Text } from "native-base";
 import { BarCodeReadEvent, RNCamera } from 'react-native-camera';
 import { themeColors } from './styles';
+import QRCode from 'react-native-qrcode-svg';
+import { CoordinatesStruct } from './typedef';
+
 
 
 
@@ -83,13 +86,18 @@ export const CameraModal = ({ visible, onClose, onBarCodeRead }: CameraModalProp
 
 type AddTagModalProps =
 {
+    coordinates: CoordinatesStruct,
     visible: boolean,
     onClose: () => void,
     onAddTag: () => void
 }
 
 
-export const AddTagModal = ({ visible, onClose, onAddTag}: AddTagModalProps) => {
+export const AddTagModal = ({coordinates, visible, onClose, onAddTag}: AddTagModalProps) => {
+    
+    let appLogo = require("./assets/images/ic_launcher_round.png");
+    let textCoordinates = `[${coordinates.latitude}, ${coordinates.longitude}]`;
+    
     return (
         <Center>
             <Modal style={{}} isOpen={visible} onClose={onClose} size="lg">
@@ -102,6 +110,19 @@ export const AddTagModal = ({ visible, onClose, onAddTag}: AddTagModalProps) => 
                         </Heading>
                     </Modal.Header>
                     <Modal.Body style={{ alignItems: "center" }}>
+                        <QRCode
+                        value={textCoordinates}
+                        logo={appLogo}
+                        logoSize={60}
+                        logoMargin={5}
+                        logoBackgroundColor="white"
+                        logoBorderRadius={100}
+                        size={200}
+                        getRef={(ref: any) => {
+                            // @ts-ignore
+                            console.log(ref.toDataURL((data)=>{console.log(data)}));
+                        }}
+                        />
                         <Text>
                             Do you want to add a tag?
                         </Text>
