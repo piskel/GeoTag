@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MAX_TAG_DISTANCE, SERVER_URL, TAG_LIST_KEY } from "./Constants";
 import { CoordinatesStruct, TagStruct } from "./typedef";
 import { ConfigManager } from "./ConfigManager";
+import { ToastAndroid } from "react-native";
 
 
 enum RequestType {
@@ -140,33 +141,32 @@ export class TagManager {
         errorCallback: (error_message: string) => void
     ): Promise<void> {
         let xhttp = new XMLHttpRequest();
-        
+
         xhttp.onreadystatechange = async () => {
 
             // Catching errors from the server
             if (xhttp.readyState != 4 || xhttp.status != 200) {
                 //@ts-ignore
                 if (xhttp._hasError) {
-                    errorCallback("There seems to be an error with the server. Please try again later.");
+                    errorCallback("There seems to be an issue with the server. Please try again later.");
                 }
                 return;
             }
 
             // If the request was successful
-            try
-            {
+            try {
                 // TODO: Define the response format of the server and handle it accordingly
                 let response = JSON.parse(xhttp.responseText);
+                console.log("SERVER OK")
                 successCallback(response);
             }
-            catch (e)
-            {
-                errorCallback("There seems to be an error with the server. Please try again later.");
+            catch (e) {
+                errorCallback("There seems to be an issue with the server. Please try again later.");
             }
         }
 
         try {
-            
+
             xhttp.open(requestType, this.server_url + path, true);
             console.log("Sending " + requestType + " request to " + this.server_url + path);
 
@@ -180,7 +180,7 @@ export class TagManager {
         }
         catch (error) {
             // If fails, JSON is probably invalid
-            errorCallback("There has been an error while trying to reach the server.");
+            errorCallback("There has been an issue while trying to reach the server.");
         }
     }
 
@@ -194,18 +194,18 @@ export class TagManager {
 
 
         let successCallbackWrapper = async (response: any) => {
-                let onlineTagsList = response as TagStruct[];
-                console.log("Parse successful");
+            let onlineTagsList = response as TagStruct[];
+            console.log("Parse successful");
 
-                // TODO: Remove tags that are not present in the online list
+            // TODO: Remove tags that are not present in the online list
 
-                for (let i = 0; i < onlineTagsList.length; i++) {
-                    let onlineTag = onlineTagsList[i];
-                    await TagManager.addTag(onlineTag, true);
-                }
+            for (let i = 0; i < onlineTagsList.length; i++) {
+                let onlineTag = onlineTagsList[i];
+                await TagManager.addTag(onlineTag, true);
+            }
         }
 
-            
+
 
         this.makeRequestToServer(
             RequestType.GET,
@@ -286,25 +286,40 @@ export class TagManager {
         // We fetch the tags from the server
         await this.updateTagsFromServer(errorCallback);
 
-        // We first check if the tag exists locally
-        let tagId = await TagManager.findTag(coordinates);
-        if (tagId === -1) {
-            errorCallback("The tag you scanned is not in the database.");
-            return;
-        }
-
         let currentLocation = await ConfigManager.getCurrentLocation()
+        let tagDistance = TagManager.getDistance(currentLocation, coordinates);
+        console.log("Distance between tag and user: " + tagDistance);
 
-        let distanceBetweenTags = TagManager.getDistance(currentLocation, coordinates);
-        // console.log(distanceBetweenTags);
-        console.log("Distance between tag and user: " + distanceBetweenTags);
+
 
         // If the tag is within the range, we add it to the list of found tags
-        if (distanceBetweenTags <= MAX_TAG_DISTANCE) {
-            console.log("Tag found");
-            // Warning: We use the tag coordinates as the id and not the user's coordinates
-            // this is because the user's coordinates do not match the tag's coordinates in the database
+        if (tagDistance <= MAX_TAG_DISTANCE) {
+
+
+            // We check if the tag exists locally
+            let tagId = await TagManager.findTag(coordinates);
+
+            if (tagId === -1) {
+                // errorCallback("The tag you scanned is not in the database.");
+                // Add the tag to the database
+                await this.postNewTag(coordinates, () => {
+                    ToastAndroid.show("Tag added to the database", ToastAndroid.SHORT);
+                    successCallback();
+                }
+                    , errorCallback);
+
+            }
+            else {
+                // console.log(distanceBetweenTags);
+
+                console.log("Tag found");
+                ToastAndroid.show("Tag found!", ToastAndroid.SHORT);
+                // Warning: We use the tag coordinates as the id and not the user's coordinates
+                // this is because the user's coordinates do not match the tag's coordinates in the database
+            }
             await TagManager.setTagToFound(coordinates);
+
+
             successCallback();
         }
         else {

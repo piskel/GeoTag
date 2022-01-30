@@ -64,6 +64,7 @@ export const theme = extendTheme({
 });
 
 export const themeColors = {
+  black: '#000000',
   dark: "#1a1a1a",
   lightdark: "#3F3F3F",
   white: "#ffffff",
@@ -159,7 +160,18 @@ export const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 5,
 
+  },
+  detailsFieldQR:{
+    padding: 10,
+    backgroundColor: "white",
+    borderRadius: 5,
+
+    alignContent: 'center',
+    marginTop: 30,
+    marginBottom: 60
+
   }
+
 });
 
 

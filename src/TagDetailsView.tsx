@@ -1,12 +1,14 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React from "react";
-import { StatusBar, View } from "react-native";
+import { View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { RootStackParamList } from "./RootStackParams";
-import { customMapLightStyle, customMapStyle, styles } from "./styles";
+import { customMapLightStyle, styles, themeColors } from "./styles";
 import { Center, Divider, Flex, Heading, ScrollView, Text, VStack } from 'native-base'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { TagStruct } from "./typedef";
+import { AppLogo } from "./Components";
+import QRCode from "react-native-qrcode-svg";
 
 
 
@@ -32,7 +34,7 @@ const FoundDateField = ({ tag }: { tag: TagStruct }) => {
             <Center margin={2}>
                 <Icon
                     name="calendar-check"
-                    color="#000"
+                    color={themeColors.black}
                     size={25}
                 ></Icon>
             </Center>
@@ -70,6 +72,7 @@ export default class TagDetailsView extends React.Component<TagDetailsViewProps,
         let locationBreakdown = tag.location.split(", ");
         console.log(locationBreakdown);
 
+        let textCoordinates = `[${tag.coordinates.latitude}, ${tag.coordinates.longitude}]`;
 
         return (
             <View style={styles.container}>
@@ -96,7 +99,7 @@ export default class TagDetailsView extends React.Component<TagDetailsViewProps,
                     </MapView>
                 </View>
 
-                <ScrollView style={{ flex: 1.5}}>
+                <ScrollView style={{ flex: 1.5 }}>
                     <VStack margin={5} space={3}>
                         <Heading size="xl" fontWeight={800} textAlign={"center"} mb={2}>
                             Tag Informations
@@ -153,7 +156,7 @@ export default class TagDetailsView extends React.Component<TagDetailsViewProps,
                                 <Text>{(new Date(tag.creationDate)).toLocaleString()}</Text>
                             </VStack>
                         </Flex>
-                        
+
                         <Flex direction="row" alignItems={'center'} style={styles.detailsField}>
                             <Center margin={2}>
                                 <Icon
@@ -173,6 +176,23 @@ export default class TagDetailsView extends React.Component<TagDetailsViewProps,
 
                         <FoundDateField tag={tag} />
 
+                        <Center alignItems={'center'}>
+                            <Flex direction="row"style={styles.detailsFieldQR}>
+                                <QRCode
+                                    value={textCoordinates}
+                                    logo={AppLogo}
+                                    logoSize={50}
+                                    logoMargin={5}
+                                    logoBackgroundColor={'white'}
+                                    logoBorderRadius={100}
+                                    size={150}
+                                    quietZone={10}
+                                />
+                            </Flex>
+                        <Text fontSize={10}>
+                        beep boop 🤖 
+                        </Text>
+                        </Center>
                     </VStack>
                 </ScrollView>
             </View>

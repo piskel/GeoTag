@@ -18,6 +18,8 @@ target 'GeoTag' do
 
   pod 'RNPermissions', :path => '../node_modules/react-native-permissions'
 
+  pod 'react-native-cameraroll', :path => '../node_modules/@react-native-community/cameraroll'
+
   target 'GeoTagTests' do
     inherit! :complete
     # Pods for testing

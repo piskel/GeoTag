@@ -101,7 +101,8 @@ type ExplorationViewProps = NativeStackScreenProps<RootStackParamList, 'Explorat
 
 export interface ExplorationViewState {
   tagList: TagStruct[],
-  markers: JSX.Element[],
+  // markers: JSX.Element[],
+  markersCoords: CoordinatesStruct[],
   errorMessage: string,
   showCameraModal: boolean,
   showErrorModal: boolean,
@@ -121,7 +122,8 @@ export default class ExplorationView
 
     this.state = {
       tagList: [],
-      markers: [],
+      // markers: [],
+      markersCoords: [],
       errorMessage: "But we don't know what...",
       showCameraModal: false,
       showErrorModal: false,
@@ -150,6 +152,7 @@ export default class ExplorationView
     this.setShowAddTagModal = this.setShowAddTagModal.bind(this);
     this.codeBarRead = this.codeBarRead.bind(this);
     this.createNewTag = this.createNewTag.bind(this);
+    this.renderMarkers = this.renderMarkers.bind(this);
 
   }
 
@@ -252,22 +255,43 @@ export default class ExplorationView
 
   async updateMarkers() {
     let tagList = await TagManager.getTags();
-    let markerList = tagList.map((tag, i) =>
+
+    let newMarkersCoords = tagList.map((tag) => {
+      return tag.coordinates;
+    });
+
+    this.setState({
+      markersCoords: newMarkersCoords
+    });
+
+    // let markerList = tagList.map((tag, i) =>
+    //   <Marker
+    //     key={i}
+    //     coordinate={{ latitude: tag.coordinates.latitude, longitude: tag.coordinates.longitude }}
+    //     pinColor={tag.isFound ? "blue" : "red"}
+    //     onPress={() => { this.props.navigation.navigate('TagDetailsView', { tag: tag }); }}
+    //   />
+    // );
+
+
+    // this.setState({ markers: [] }); // Necessary for the markers to update
+    // this.setState({
+    //   markers: markerList
+    // });
+  }
+
+  renderMarkers() {
+    let markers = this.state.markersCoords.map((coordinates, i) =>
       <Marker
         key={i}
-        coordinate={{ latitude: tag.coordinates.latitude, longitude: tag.coordinates.longitude }}
-        pinColor={tag.isFound ? "blue" : "red"}
-        onPress={() => { this.props.navigation.navigate('TagDetailsView', { tag: tag }); }}
+        coordinate={{ latitude: coordinates.latitude, longitude: coordinates.longitude }}
+        pinColor={this.state.tagList[i].isFound ? "blue" : "red" }
+        onPress={() => { this.props.navigation.navigate('TagDetailsView', { tag: this.state.tagList[i] }); }}
       />
     );
 
-
-    this.setState({ markers: [] }); // Necessary for the markers to update
-    this.setState({
-      markers: markerList
-    });
+    return markers;
   }
-
 
   async updateCurrentLocation() {
 
@@ -359,6 +383,8 @@ export default class ExplorationView
             userLocationUpdateInterval={5000}
             userLocationFastestInterval={5000}
 
+            children={this.renderMarkers()}
+
 
             onLongPress={async(e) => {
               let coordinates = e.nativeEvent.coordinate;
@@ -382,9 +408,7 @@ export default class ExplorationView
               pitch: 90, // Camera inclination
               zoom: 13 // Camera zoom
             }}
-          >
-            {this.state.markers}
-          </MapView>
+          />
 
           <Heading size={"xl"} paddingLeft={1.5} borderRadius={5} fontWeight={900} style={{ position: "absolute", top: 45, left: 20 }} color={themeColors.dark}>
             GEOTAG

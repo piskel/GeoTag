@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import {
+  LogBox,
   Platform,
   StatusBar,
 } from 'react-native';
@@ -30,6 +31,12 @@ if (Platform.OS === "android") {
 
 const initApp = async () =>
 {
+  // Ignore event emitter warnings. Caused by a library.
+  LogBox.ignoreLogs(['new NativeEventEmitter()']);
+
+
+
+  // TODO: Check storage handling, markers can cause slow downs
   // await ConfigManager.setFirstStart(); // Debug only
   await ConfigManager.initConfig();
   // await loadMockConfig(); // Debug only

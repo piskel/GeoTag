@@ -28,6 +28,7 @@ export class ConfigManager {
         const firstStart = await AsyncStorage.getItem(FIRST_START_KEY);
         if (firstStart === 'true' || firstStart === null) {
             await ConfigManager.resetConfig();
+            await AsyncStorage.setItem(FIRST_START_KEY, "false");
         }
 
         // Set the Geolocation request to the fine accuracy
