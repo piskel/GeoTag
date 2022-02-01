@@ -21,7 +21,6 @@ export class TagManager {
     private server_url: string;
 
     private constructor() {
-        // TODO: Move this, might be useless
         this.server_url = SERVER_URL;
     }
 
@@ -47,6 +46,7 @@ export class TagManager {
 
     /**
      * Returns all tags from local storage.
+     * @returns A promise of the list of tags from the local storage.
      */
     public static async getTags(): Promise<TagStruct[]> {
         const jsonTags = await AsyncStorage.getItem(TAG_LIST_KEY);
@@ -54,6 +54,10 @@ export class TagManager {
         return tagList;
     }
 
+    /**
+     * Sets the tag with the specified coordinate to found in the local storage.
+     * @param coordinates The coordinates of the tag.
+     */
     public static async setTagToFound(coordinates: CoordinatesStruct): Promise<void> {
         let tagId = await TagManager.findTag(coordinates);
         let tagList = await TagManager.getTags();
@@ -119,12 +123,6 @@ export class TagManager {
     }
 
 
-    public async initRequestListeners() {
-
-    }
-
-
-
     /**
      * Sends a request to the API server.
      * @param requestType The type of request to send.
@@ -187,7 +185,6 @@ export class TagManager {
 
     /**
      * Update the tags on the local storage by fetching them from the server.
-     * @param successCallback Callback function that is called when the tags are updated.
      * @param errorCallback Callback function that is called when an error occurs.
      */
     public async updateTagsFromServer(errorCallback: (message: string) => void): Promise<void> {
@@ -205,8 +202,6 @@ export class TagManager {
             }
         }
 
-
-
         this.makeRequestToServer(
             RequestType.GET,
             "/api/geotag",
@@ -218,12 +213,11 @@ export class TagManager {
 
     /**
      * Creates a new tag on the server's database.
-     * @param latitude Latitude of the tag.
-     * @param longitude Longitude of the tag.
+     * @param coordinates The coordinates of the tag.
+     * @param successCallback Callback function that is called when the tag is created.
+     * @param errorCallback Callback function that is called when an error occurs.
      */
     public async postNewTag(coordinates: CoordinatesStruct, successCallback: () => void, errorCallback: (message: string) => void): Promise<void> {
-
-        // TODO: Should be done only after confirmation that the user placed the tag at the correct location
 
         this.makeRequestToServer(
             RequestType.POST,
@@ -300,7 +294,6 @@ export class TagManager {
             let tagId = await TagManager.findTag(coordinates);
 
             if (tagId === -1) {
-                // errorCallback("The tag you scanned is not in the database.");
                 // Add the tag to the database
                 await this.postNewTag(coordinates, () => {
                     ToastAndroid.show("Tag added to the database", ToastAndroid.SHORT);
@@ -310,16 +303,12 @@ export class TagManager {
 
             }
             else {
-                // console.log(distanceBetweenTags);
-
                 console.log("Tag found");
                 ToastAndroid.show("Tag found!", ToastAndroid.SHORT);
                 // Warning: We use the tag coordinates as the id and not the user's coordinates
                 // this is because the user's coordinates do not match the tag's coordinates in the database
             }
             await TagManager.setTagToFound(coordinates);
-
-
             successCallback();
         }
         else {

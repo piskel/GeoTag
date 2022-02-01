@@ -11,6 +11,9 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 
 
+export const AppLogo = require("./assets/images/ic_launcher_round.png");
+
+
 ///////////////////////////////////////////////////////////////
 // Error Modal ////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////
@@ -75,25 +78,61 @@ export const CameraModal = ({ visible, onClose, onBarCodeRead }: CameraModalProp
                             style={{ height: 280, width: "110%" }}
                             onBarCodeRead={onBarCodeRead}
                             captureAudio={false}
-                        >
-                        </RNCamera>
+                        />
                     </Modal.Body>
                 </Modal.Content>
             </Modal>
         </Center>);
 }
 
+
+
+///////////////////////////////////////////////////////////////
+// Add Info Modal /////////////////////////////////////////////
+///////////////////////////////////////////////////////////////
+type AddInfoModalProps =
+    {
+        visible: boolean,
+        onClose: () => void
+    }
+
+export const AddInfoModal = ({ visible, onClose }: AddInfoModalProps) => {
+    return (
+        <Center>
+            <Modal style={{}} isOpen={visible} onClose={onClose} size="lg">
+                <Modal.Content style={{}}>
+                    <Modal.CloseButton />
+
+                    <Modal.Header>
+                        <Heading fontWeight={800} textAlign={"center"} color={themeColors.dark}>
+                            How to create a tag
+                        </Heading>
+                    </Modal.Header>
+                    <Modal.Body style={{ alignItems: "center" }}>
+                        <Text style={{ marginBottom: 0, marginTop: 10, textAlign: "center" }}>
+                            To add a tag, long press on the map the location where you want to add it !
+                        </Text>
+                    </Modal.Body>
+                </Modal.Content>
+            </Modal>
+        </Center>);
+}
+
+
 ///////////////////////////////////////////////////////////////
 // Add Tag Modal //////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////
 
 
+/**
+ * Allows us to save an SVG file to the camera roll
+ * @param ref Reference to the SVG component
+ */
 let saveToCameraRoll = async (ref: any) => {
     // console.log(ref)
     if (ref) {
         // @ts-ignore
         ref.toDataURL(async (dataUrl: any) => {
-            console.log(dataUrl);
 
             await RNFS.writeFile(`${RNFS.CachesDirectoryPath}/GeoTag.png`, dataUrl, 'base64').then(
                 (success: any) => {
@@ -120,7 +159,6 @@ let saveToCameraRoll = async (ref: any) => {
 
 
 
-export const AppLogo = require("./assets/images/ic_launcher_round.png");
 
 type AddTagModalProps =
     {
@@ -137,10 +175,7 @@ export const AddTagModal = ({ coordinates, visible, onClose, onAddTag }: AddTagM
 
     let qrRef: any = null;
 
-
-
-
-
+    // We configure the QRCode element here to be able to get the SVG element with the ref
     let qr = new QRCode({
         value: textCoordinates,
         logo: AppLogo,
@@ -161,7 +196,7 @@ export const AddTagModal = ({ coordinates, visible, onClose, onAddTag }: AddTagM
     return (
         <Center>
             <Modal style={{}} isOpen={visible} onClose={onClose} size="lg">
-                <Modal.Content style={{alignItems: "center"}}>
+                <Modal.Content style={{ alignItems: "center" }}>
                     <Modal.CloseButton />
 
                     <Modal.Header>
@@ -170,7 +205,11 @@ export const AddTagModal = ({ coordinates, visible, onClose, onAddTag }: AddTagM
                         </Heading>
                     </Modal.Header>
                     <Modal.Body>
-                        <View style={{ alignItems: "center", width: 250}}>
+                        <View style={{ alignItems: "center", width: 250 }}>
+                            
+                            <Text style={{ marginBottom: 0, marginTop: 10, textAlign: "center" }}>
+                                This is the QR code for your new GeoTag !
+                            </Text>
                             <Pressable style={{}} onPress={async () => {
                                 // @ts-ignore   
                                 saveToCameraRoll(qrRef);
@@ -178,14 +217,11 @@ export const AddTagModal = ({ coordinates, visible, onClose, onAddTag }: AddTagM
                             }}>
                                 {qr}
                             </Pressable>
-                            <Text style={{marginBottom: 0, marginTop:10, textAlign:"center"}}>
-                            This is the QR code for your new GeoTag !
+                            <Text style={{ marginBottom: 0, marginTop: 10, textAlign: "center" }}>
+                                Place this tag in real life at the location you have selected and then scan it to validate it!
                             </Text>
-                            <Text style={{marginBottom: 0, marginTop:10, textAlign:"center"}}>
-                            You can save it to the camera roll by pressing the button below.
-                            </Text>
-                            <Text style={{marginBottom: 10, marginTop:10, textAlign:"center"}}>
-                            Place this tag in real life at the location you have selected and then scan it to validate it!
+                            <Text style={{ marginBottom: 20, marginTop: 10, textAlign: "center" }}>
+                                You can save it to the camera roll by pressing the button below.
                             </Text>
                             <Button style={{ backgroundColor: themeColors.dark }} onPress={async () => {
                                 // @ts-ignore   
@@ -193,13 +229,13 @@ export const AddTagModal = ({ coordinates, visible, onClose, onAddTag }: AddTagM
                                 onClose();
                             }}>
                                 Save to Camera Roll
-                                
+
                                 <Center>
-                                <Icon
-                                    name="download"
-                                    color={themeColors.white}
-                                    size={25}
-                                ></Icon>
+                                    <Icon
+                                        name="download"
+                                        color={themeColors.white}
+                                        size={25}
+                                    ></Icon>
                                 </Center>
                             </Button>
                         </View>

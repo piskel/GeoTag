@@ -10,13 +10,9 @@ import { BarCodeReadEvent } from 'react-native-camera';
 import { CoordinatesStruct, TagStruct } from './typedef';
 import { TagManager } from './TagManager';
 import { ConfigManager } from './ConfigManager';
-import { AddTagModal, CameraModal, ErrorModal } from './Components';
+import { AddInfoModal, AddTagModal, CameraModal, ErrorModal } from './Components';
 
 
-
-// TODO : Let users set their tag either public (displays them on the map)
-
-// TODO : Move components in a separate file
 
 
 ///////////////////////////////////////////////////////////////
@@ -101,13 +97,12 @@ type ExplorationViewProps = NativeStackScreenProps<RootStackParamList, 'Explorat
 
 export interface ExplorationViewState {
   tagList: TagStruct[],
-  // markers: JSX.Element[],
   markersCoords: CoordinatesStruct[],
   errorMessage: string,
   showCameraModal: boolean,
   showErrorModal: boolean,
   showAddTagModal: boolean,
-  showStagger: boolean,
+  showAddInfoModal: boolean,
   initialCoordinates: CoordinatesStruct,
   currentCoordinates: CoordinatesStruct,
   newTagCoordinates: CoordinatesStruct,
@@ -128,7 +123,7 @@ export default class ExplorationView
       showCameraModal: false,
       showErrorModal: false,
       showAddTagModal: false,
-      showStagger: false,
+      showAddInfoModal: false,
       initialCoordinates: {
         latitude: 0,
         longitude: 0
@@ -150,6 +145,7 @@ export default class ExplorationView
     this.setShowCameraModal = this.setShowCameraModal.bind(this);
     this.setShowErrorModal = this.setShowErrorModal.bind(this);
     this.setShowAddTagModal = this.setShowAddTagModal.bind(this);
+    this.setShowAddInfoModal = this.setShowAddInfoModal.bind(this);
     this.codeBarRead = this.codeBarRead.bind(this);
     this.createNewTag = this.createNewTag.bind(this);
     this.renderMarkers = this.renderMarkers.bind(this);
@@ -158,34 +154,49 @@ export default class ExplorationView
 
 
 
-
+  /**
+   * Sets the visibility of the camera modal
+   * @param showCameraModal if true, the modal is displayed
+   */
   setShowCameraModal(showCameraModal: boolean) {
     this.setState({ showCameraModal: showCameraModal });
   }
 
+  /**
+   * Sets the visibility of the error modal
+   * @param showErrorModal if true, the modal is displayed
+   */
   setShowErrorModal(showErrorModal: boolean) {
     this.setState({ showErrorModal: showErrorModal });
   }
 
+  /**
+   * Sets the visibility of the add tag modal
+   * @param showAddTagModal if true, the modal is displayed
+   */
   setShowAddTagModal(showAddTagModal: boolean) {
     this.setState({ showAddTagModal: showAddTagModal });
   }
 
-  setShowStagger(showStagger: boolean) {
-    this.setState({ showStagger: showStagger });
-  }
 
+  /**
+   * Sets the visibility of the add info modal
+   * @param showAddInfoModal if true, the modal is displayed
+   */
+  setShowAddInfoModal(showAddInfoModal: boolean) {
+    this.setState({ showAddInfoModal: showAddInfoModal });
+  }
 
 
 
   /**
    * Is called when a QRCode is read.
-   * @param event 
+   * @param event the event containing the QRCode's data
    */
   async codeBarRead(event: BarCodeReadEvent) {
     console.log("Scanning QR Code");
-    this.setShowCameraModal(false);
-    this.updateTags();
+    this.setShowCameraModal(false); // We close the camera modal
+    this.updateTags();  // We update the tags list
 
     let tm = TagManager.getInstance();
 
@@ -197,28 +208,14 @@ export default class ExplorationView
         this.setState({ errorMessage: message });
         this.setShowErrorModal(true);
       });
-
-    // If the tag is found, display a toast message
-    if (this.state.tagList.filter((tag) => tag.isFound).length > 0) {
-      ToastAndroid.showWithGravity(
-        "Tag found!",
-        ToastAndroid.SHORT,
-        ToastAndroid.CENTER
-      );
-    }
-
-
-
-    // console.log(results);
   }
 
+  /**
+   * Callback function called to add a tag and displays errors through the error modal if needed
+   */
   async createNewTag() {
-
-
     this.setShowAddTagModal(false);
     let tm = TagManager.getInstance();
-    // let currentLocation = await ConfigManager.getCurrentLocation();
-
 
     await tm.postNewTag(this.state.newTagCoordinates,
       async () => {
@@ -231,7 +228,9 @@ export default class ExplorationView
 
   }
 
-
+  /**
+   * A function to update every information the component might need at once.
+   */
   async updateInformations() {
     this.updateCurrentLocation();
     this.updateTags();
@@ -241,18 +240,19 @@ export default class ExplorationView
 
 
   /**
-   * Updates the list of markers that are displayed on the map.
+   * Updates the tags stored in the component's state
    */
   async updateTags() {
-
     let tagList = await TagManager.getTags();
-
     this.setState({
       tagList: tagList
     });
 
   }
 
+  /**
+   * Updates the markers displayed on the map
+   */
   async updateMarkers() {
     let tagList = await TagManager.getTags();
 
@@ -263,29 +263,18 @@ export default class ExplorationView
     this.setState({
       markersCoords: newMarkersCoords
     });
-
-    // let markerList = tagList.map((tag, i) =>
-    //   <Marker
-    //     key={i}
-    //     coordinate={{ latitude: tag.coordinates.latitude, longitude: tag.coordinates.longitude }}
-    //     pinColor={tag.isFound ? "blue" : "red"}
-    //     onPress={() => { this.props.navigation.navigate('TagDetailsView', { tag: tag }); }}
-    //   />
-    // );
-
-
-    // this.setState({ markers: [] }); // Necessary for the markers to update
-    // this.setState({
-    //   markers: markerList
-    // });
   }
 
-  renderMarkers() {
+  /**
+   * Returns a list of marker elements for every tag present in the device's storage
+   * @returns The list of markers for each tags in local storage
+   */
+  renderMarkers(): JSX.Element[] {
     let markers = this.state.markersCoords.map((coordinates, i) =>
       <Marker
         key={i}
         coordinate={{ latitude: coordinates.latitude, longitude: coordinates.longitude }}
-        pinColor={this.state.tagList[i].isFound ? "blue" : "red" }
+        pinColor={this.state.tagList[i].isFound ? "blue" : "red"}
         onPress={() => { this.props.navigation.navigate('TagDetailsView', { tag: this.state.tagList[i] }); }}
       />
     );
@@ -293,8 +282,10 @@ export default class ExplorationView
     return markers;
   }
 
+  /**
+   * Updates the current in the component's staet from the one in storage
+   */
   async updateCurrentLocation() {
-
     let currentLocation = await ConfigManager.getCurrentLocation();
     this.setState({
       currentCoordinates: {
@@ -309,9 +300,8 @@ export default class ExplorationView
    * Runs once the component is loaded.
    */
   async componentDidMount() {
-    // Get the initial coordinates of the user
-    // this.updateCurrentLocation();
 
+    // We set the initial location of the user in the state to be displayed on the map.
     let currentLocation = await ConfigManager.getCurrentLocation();
     this.setState({
       initialCoordinates: {
@@ -320,18 +310,16 @@ export default class ExplorationView
       }
     })
 
-
+    // We do the first update once the component is mounted
     const tm = TagManager.getInstance();
     await tm.updateTagsFromServer(
       (message) => {
         this.setState({ errorMessage: message });
         this.setShowErrorModal(true);
       });
-
-
     await this.updateInformations();
 
-
+    // Sets the interval at which to update the component's information
     setInterval(async () => {
       console.log("Auto update");
 
@@ -342,20 +330,15 @@ export default class ExplorationView
 
   }
 
-
-  componentDidUpdate() { }
-
-
-
-
+  /**
+   * Renders the component
+   * @returns The JSX to display
+   */
   render() {
-
-    // let currentLocation = await ConfigManager.getCurrentLocation();
 
     return (
       <View style={{
         flex: 1,
-        // backgroundColor: '#f0f0f0'}}>
         backgroundColor: themeColors.dark
       }}>
 
@@ -370,34 +353,20 @@ export default class ExplorationView
             showsCompass={false}
             showsUserLocation={true}
             showsMyLocationButton={false}
-            // followsUserLocation={true}
             showsBuildings={true}
-
             toolbarEnabled={false}
-
             customMapStyle={customMapLightStyle}
-
             provider={PROVIDER_GOOGLE}
-
             userLocationPriority={'high'}
             userLocationUpdateInterval={5000}
             userLocationFastestInterval={5000}
-
             children={this.renderMarkers()}
-
-
-            onLongPress={async(e) => {
+            onLongPress={async (e) => {
               let coordinates = e.nativeEvent.coordinate;
-              this.setState({newTagCoordinates: coordinates});
+              this.setState({ newTagCoordinates: coordinates });
               this.setShowAddTagModal(true);
-              }
             }
-
-            // onUserLocationChange={(location) => { console.log("OK") }}
-
-
-
-
+            }
             camera={{
               altitude: 0,
               center: {
@@ -419,19 +388,19 @@ export default class ExplorationView
 
         <View style={styles.navView}>
 
+          {/* Info button */}
           <View style={{ marginBottom: 25 }}>
             <Icon.Button
               iconStyle={styles.scanButtonStyle}
               style={styles.scanButton}
-              name="map-marker-plus"
+              name="map-marker-question"
               color={themeColors.white}
               size={35}
-              onPress={(e) => this.setShowAddTagModal(true)}>
+              onPress={(e) => this.setShowAddInfoModal(true)}>
             </Icon.Button>
           </View>
 
-          {/* TODO: Add stagger */}
-
+          {/* Scan button */}
           <View style={styles.scanButtonView}>
             <Icon.Button
               iconStyle={styles.scanButtonStyle}
@@ -443,10 +412,9 @@ export default class ExplorationView
             </Icon.Button>
           </View>
 
-
         </View>
 
-
+        
         <ScrollView style={styles.buttonListView}>
           <Heading size="xl" fontWeight={800} textAlign={"center"} mb={2} color={themeColors.white}>
             Tags found
@@ -457,7 +425,7 @@ export default class ExplorationView
         <CameraModal visible={this.state.showCameraModal} onClose={() => this.setShowCameraModal(false)} onBarCodeRead={async (e) => await this.codeBarRead(e)} />
         <ErrorModal visible={this.state.showErrorModal} message={this.state.errorMessage} onClose={() => this.setShowErrorModal(false)} />
         <AddTagModal coordinates={this.state.newTagCoordinates} visible={this.state.showAddTagModal} onClose={() => this.setShowAddTagModal(false)} onAddTag={async () => await this.createNewTag()} />
-
+        <AddInfoModal visible={this.state.showAddInfoModal} onClose={() => this.setShowAddInfoModal(false)} />
       </View>);
   }
 }

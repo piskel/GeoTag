@@ -4,7 +4,6 @@ import { TagManager } from "./TagManager";
 import Geolocation from 'react-native-geolocation-service';
 import { CoordinatesStruct } from "./typedef";
 import { PermissionsAndroid } from "react-native";
-import { requestLocationAccuracy } from "react-native-permissions";
 
 
 
@@ -17,8 +16,6 @@ export class ConfigManager {
         await AsyncStorage.clear();
         await AsyncStorage.setItem(FIRST_START_KEY, "false");
         await TagManager.clearTags();
-
-
     }
 
     /**
@@ -31,8 +28,7 @@ export class ConfigManager {
             await AsyncStorage.setItem(FIRST_START_KEY, "false");
         }
 
-        // Set the Geolocation request to the fine accuracy
-
+        // Request fine geolocation permission
         try {
             const granted = await PermissionsAndroid.request(
                 PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
@@ -65,38 +61,48 @@ export class ConfigManager {
     }
 
 
+    /**
+     * Sets our application to "first start" mode in the storage.
+     * Will reset all configuration.
+     */
     public static setFirstStart = async () => {
         await AsyncStorage.setItem(FIRST_START_KEY, 'true');
     }
 
+    /**
+     * Resets our location in the storage.
+     */
     public static resetCurrentLocation = async () => {
         await AsyncStorage.removeItem(CURRENT_LOCATION_KEY);
         await AsyncStorage.setItem(CURRENT_LOCATION_KEY, JSON.stringify({ latitude: 0, longitude: 0 }));
     }
 
+    /**
+     * Fetches the user's current location and stores in the local storage.
+     */
     public static updateCurrentLocation = async () => {
-
         Geolocation.getCurrentPosition(
             async (position) => {
                 await AsyncStorage.setItem(CURRENT_LOCATION_KEY, JSON.stringify(position.coords));
-                // console.log("Current location updated");
-                // console.log(position);
+
             },
             (error) => {
                 console.log(error.code, error.message);
             },
             {
                 enableHighAccuracy: true,
-                timeout: 15000/*, maximumAge: 10000*/,
-                // distanceFilter: 10,
-                // accuracy:{android: 'high'}
+                timeout: 15000
             });
     }
 
-
+    /**
+     * Returns the user's current location.
+     * @returns The promise for the current location as a CoordinatesStruct.
+     */
     public static getCurrentLocation = async (): Promise<CoordinatesStruct> => {
         const location = await AsyncStorage.getItem(CURRENT_LOCATION_KEY);
-        if (location === null) {
+        if (location === null) // If there is no location set in storage yet, we return the default location
+        {
             return { latitude: 0, longitude: 0 };
         }
         else {
